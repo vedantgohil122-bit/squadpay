@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+/* ============================================================
+   SQUADPAY v3 — DESI NEO-BRUTALIST DESIGN SYSTEM
+   Personality: Street poster × Meme sticker × Scoreboard
+   Palette: Warm black, Marigold, Hot pink, Lime, Bone white
+   ============================================================ */
+@theme {
+  --font-display: "Sora", system-ui, sans-serif;
+  --font-body:    "Inter", system-ui, sans-serif;
+
+  /* Backgrounds */
+  --color-ink-950: #0e0c0a;
+  --color-ink-900: #161310;
+  --color-ink-800: #211d18;
+
+  /* Brand */
+  --color-marigold:  #f5a623;
+  --color-hot-pink:  #ff3d6e;
+  --color-lime:      #b8f02a;
+  --color-aqua:      #00d4c8;
+  --color-bone:      #f5f0e8;
+
+  /* Status */
+  --color-mint:  #34d399;
+  --color-rose:  #fb7185;
+
+  /* Glass kept for overlays only */
+  --color-glass: #ffffff0a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--color-ink-950);
+  color: var(--color-bone);
+  font-family: var(--font-body);
+}
+
+/* ---- BRUTALIST CARD ---- */
+.bcard {
+  background: var(--color-ink-900);
+  border: 2px solid rgba(245,240,232,0.2);
+  border-radius: 1rem;
+  box-shadow: 4px 4px 0 rgba(245,240,232,0.12);
+  transition: box-shadow 0.12s, transform 0.12s;
+}
+.bcard:hover { box-shadow: 6px 6px 0 rgba(245,240,232,0.18); transform: translate(-1px,-1px); }
+
+/* ---- ACCENT CARD (marigold border) ---- */
+.bcard-yellow { border-color: var(--color-marigold); box-shadow: 4px 4px 0 var(--color-marigold); }
+.bcard-pink   { border-color: var(--color-hot-pink); box-shadow: 4px 4px 0 var(--color-hot-pink); }
+.bcard-lime   { border-color: var(--color-lime);     box-shadow: 4px 4px 0 var(--color-lime); }
+.bcard-aqua   { border-color: var(--color-aqua);     box-shadow: 4px 4px 0 var(--color-aqua); }
+
+/* ---- BRUTALIST BUTTON ---- */
+.bbtn {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-family: var(--font-display); font-weight: 700;
+  border: 2px solid var(--color-bone); border-radius: 0.75rem;
+  padding: 0.6rem 1.25rem; font-size: 0.875rem;
+  background: var(--color-marigold); color: var(--color-ink-950);
+  box-shadow: 3px 3px 0 var(--color-bone);
+  transition: box-shadow 0.1s, transform 0.1s;
+  cursor: pointer;
+}
+.bbtn:hover  { box-shadow: 5px 5px 0 var(--color-bone); transform: translate(-1px,-1px); }
+.bbtn:active { box-shadow: 1px 1px 0 var(--color-bone); transform: translate(2px,2px); }
+.bbtn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: 3px 3px 0 var(--color-bone); }
+
+.bbtn-ghost {
+  background: transparent; color: var(--color-bone);
+  border: 2px solid rgba(245,240,232,0.3);
+  box-shadow: 3px 3px 0 rgba(245,240,232,0.15);
+}
+.bbtn-ghost:hover { box-shadow: 5px 5px 0 rgba(245,240,232,0.25); transform: translate(-1px,-1px); }
+.bbtn-ghost:active { box-shadow: 1px 1px 0 rgba(245,240,232,0.15); transform: translate(2px,2px); }
+
+.bbtn-pink  { background: var(--color-hot-pink); }
+.bbtn-lime  { background: var(--color-lime); }
+.bbtn-aqua  { background: var(--color-aqua); }
+
+/* ---- STICKER badge (rotated label) ---- */
+.sticker {
+  display: inline-block;
+  background: var(--color-marigold); color: var(--color-ink-950);
+  font-family: var(--font-display); font-weight: 800;
+  font-size: 0.65rem; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 0.15rem 0.6rem; border-radius: 999px;
+  border: 2px solid var(--color-ink-950);
+  transform: rotate(-2deg);
+}
+.sticker-pink { background: var(--color-hot-pink); color: var(--color-bone); }
+.sticker-lime { background: var(--color-lime); }
+.sticker-aqua { background: var(--color-aqua); }
+
+/* ---- INPUT ---- */
+.binput {
+  width: 100%; background: var(--color-ink-800);
+  border: 2px solid rgba(245,240,232,0.2); border-radius: 0.75rem;
+  padding: 0.65rem 1rem; font-size: 0.875rem; color: var(--color-bone);
+  outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.binput::placeholder { color: rgba(245,240,232,0.3); }
+.binput:focus { border-color: var(--color-marigold); box-shadow: 0 0 0 3px rgba(245,166,35,0.15); }
+
+/* ---- MARQUEE tape ---- */
+.marquee-wrap { overflow: hidden; background: var(--color-marigold); border-top: 2px solid var(--color-ink-950); border-bottom: 2px solid var(--color-ink-950); }
+.marquee-inner { display: flex; gap: 3rem; width: max-content; animation: marquee 22s linear infinite; }
+.marquee-inner span { white-space: nowrap; font-family: var(--font-display); font-weight: 800; font-size: 0.8rem; letter-spacing: 0.06em; color: var(--color-ink-950); }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ---- UTILITY ---- */
+.font-display { font-family: var(--font-display); }
+.glass { background: var(--color-glass); border: 1px solid rgba(245,240,232,0.1); backdrop-filter: blur(16px); border-radius: 1.25rem; }
+
+/* ---- SCROLLBAR ---- */
+::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: var(--color-ink-900); } ::-webkit-scrollbar-thumb { background: rgba(245,240,232,0.2); border-radius: 99px; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}

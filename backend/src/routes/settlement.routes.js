@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import { requireAuth } from '../middleware/auth.js';
+import { createSettlement, confirmSettlement, denySettlement, listSettlements } from '../controllers/settlement.controller.js';
+const r = Router();
+r.use(requireAuth);
+r.post('/', createSettlement);
+r.patch('/:id/confirm', confirmSettlement);
+r.patch('/:id/deny', denySettlement);
+r.get('/squad/:squadId', listSettlements);
+export default r;

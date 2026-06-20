@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import { requireAuth } from '../middleware/auth.js';
+import { upload, createMemory, listMemories, toggleReaction, addComment, deleteMemory } from '../controllers/memory.controller.js';
+const r = Router();
+r.use(requireAuth);
+r.post('/', upload.single('photo'), createMemory);
+r.get('/squad/:squadId', listMemories);
+r.post('/:id/react', toggleReaction);
+r.post('/:id/comment', addComment);
+r.delete('/:id', deleteMemory);
+export default r;
