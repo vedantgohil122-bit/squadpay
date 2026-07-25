@@ -1,0 +1,13 @@
+import { Router } from 'express';
+import { requireAuth } from '../middleware/auth.js';
+import { listTrips, createTrip, tripDetail, updateTripStatus, deleteTrip, reassignExpense, listUnassignedExpenses } from '../controllers/trip.controller.js';
+const r = Router();
+r.use(requireAuth);
+r.get('/squad/:squadId', listTrips);
+r.post('/', createTrip);
+r.get('/:tripId', tripDetail);
+r.patch('/:tripId/status', updateTripStatus);
+r.delete('/:tripId', deleteTrip);
+r.get('/squad/:squadId/unassigned', listUnassignedExpenses);
+r.patch('/expense/:expenseId/assign', reassignExpense);
+export default r;

@@ -1,0 +1,12 @@
+import { Router } from 'express';
+import { requireAuth } from '../middleware/auth.js';
+import { addPersonalExpense, listPersonalExpenses, deletePersonalExpense, personalAnalytics, setBudget, exportPersonalExpenses } from '../controllers/personal.controller.js';
+const r = Router();
+r.use(requireAuth);
+r.post('/', addPersonalExpense);
+r.get('/', listPersonalExpenses);
+r.delete('/:id', deletePersonalExpense);
+r.get('/analytics', personalAnalytics);
+r.post('/budget', setBudget);
+r.get('/export', exportPersonalExpenses);
+export default r;
