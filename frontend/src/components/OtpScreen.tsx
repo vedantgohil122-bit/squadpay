@@ -74,7 +74,7 @@ export default function OtpScreen({
 
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="w-full">
-      <button onClick={onBack} className="mb-4 flex items-center gap-1.5 text-xs font-bold" style={{ color: 'rgba(245,240,232,0.5)' }}>
+      <button onClick={onBack} className="mb-4 flex items-center gap-1.5 text-xs font-bold" style={{ color:'var(--text-dim)' }}>
         <ArrowLeft size={14} /> Back
       </button>
 
@@ -82,8 +82,8 @@ export default function OtpScreen({
         <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: 'rgba(245,166,35,0.15)', border: '2px solid rgba(245,166,35,0.4)' }}>
           <Mail size={20} color="#f5a623" />
         </div>
-        <h2 className="font-display text-lg font-extrabold" style={{ color: '#f5f0e8' }}>{title}</h2>
-        <p className="mt-1 text-xs" style={{ color: 'rgba(245,240,232,0.5)' }}>
+        <h2 className="font-display text-lg font-extrabold" style={{ color:'var(--text)' }}>{title}</h2>
+        <p className="mt-1 text-xs" style={{ color:'var(--text-dim)' }}>
           {subtitle || 'Code bheja gaya hai'} <b style={{ color: '#f5a623' }}>{email}</b> pe
         </p>
       </div>
@@ -101,8 +101,8 @@ export default function OtpScreen({
             onKeyDown={(e) => handleKeyDown(i, e)}
             className="h-12 w-10 rounded-xl text-center text-lg font-extrabold outline-none transition sm:h-14 sm:w-12"
             style={{
-              background: '#1a1612', color: '#f5f0e8',
-              border: `2px solid ${error ? '#ff3d6e' : d ? '#f5a623' : 'rgba(245,240,232,0.15)'}`,
+              background:'var(--card)', color:'var(--text)',
+              border: `2px solid ${error ? '#ff3d6e' : d ? '#f5a623' : 'var(--border)'}`,
             }}
           />
         ))}
@@ -122,8 +122,8 @@ export default function OtpScreen({
 
       <div className="mt-4 text-center">
         {cooldown > 0 ? (
-          <p className="text-xs" style={{ color: 'rgba(245,240,232,0.4)' }}>
-            Naya code <b style={{ color: 'rgba(245,240,232,0.6)' }}>{cooldown}s</b> mein bhej sakte ho
+          <p className="text-xs" style={{ color:'var(--text-faint)' }}>
+            Naya code <b style={{ color:'var(--text-dim)' }}>{cooldown}s</b> mein bhej sakte ho
           </p>
         ) : (
           <button onClick={resend} disabled={resending} className="inline-flex items-center gap-1.5 text-xs font-bold" style={{ color: '#f5a623' }}>

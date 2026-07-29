@@ -1,24 +1,16 @@
-// ============================================================
-// SERVICE WORKER — app-shell caching only (no offline data sync)
-// This is intentionally minimal: it caches the static build files
-// (HTML/CSS/JS/icons) so the app installs properly as a PWA and
-// loads instantly on repeat visits. It does NOT cache API responses
-// or attempt to serve expense/squad data offline — that's a
-// separate, bigger feature (see SquadPay roadmap: offline support).
-//
-// Network-first for navigation requests (so users always get the
-// latest deployed version), cache-first for static assets (so
-// repeat loads are instant).
-// ============================================================
+// SquadPay Service Worker v2 — full offline + push support
+// - App shell cache (HTML/CSS/JS/icons)
+// - API GET cache (stale-while-revalidate) for offline viewing
+// - Background sync for queued mutations
+// - Push notification handling
 
-const CACHE_NAME = 'squadpay-shell-v1';
-const SHELL_ASSETS = ['/', '/manifest.json', '/icon-192.png', '/icon-512.png', '/favicon.png'];
+const SHELL_CACHE = 'squadpay-shell-v3';
+const API_CACHE = 'squadpay-api-v3';
+const SHELL_ASSETS = ['/', '/manifest.json', '/icon-192.png', '/icon-512.png', '/favicon.png', '/apple-touch-icon.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_ASSETS)).catch(() => {
-      // If pre-caching fails (e.g. offline during install), don't block activation
-    })
+    caches.open(SHELL_CACHE).then((cache) => cache.addAll(SHELL_ASSETS)).catch(() => {})
   );
   self.skipWaiting();
 });
@@ -26,33 +18,106 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      Promise.all(keys.filter((k) => k !== SHELL_CACHE && k !== API_CACHE).map((k) => caches.delete(k)))
     )
   );
   self.clients.claim();
 });
 
+// Background sync for offline queue
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'squadpay-sync') {
+    event.waitUntil(
+      // Notify clients to flush queue
+      self.clients.matchAll().then((clients) => {
+        clients.forEach((c) => c.postMessage({ type: 'SYNC_QUEUE' }));
+      })
+    );
+  }
+});
+
+// Push notifications
+self.addEventListener('push', (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch { data = { body: event.data?.text() }; }
+  const title = data.title || 'SquadPay 🔔';
+  const options = {
+    body: data.body || data.message || 'Squad mein kuch naya hua hai',
+    icon: '/icon-192.png',
+    badge: '/favicon.png',
+    tag: data.tag || 'squadpay',
+    data: data,
+    vibrate: [100, 50, 100],
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const data = event.notification.data || {};
+  const url = data.url || (data.squadId ? `/app/squad/${data.squadId}` : '/app');
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window' }).then((clients) => {
+      for (const client of clients) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) return client.focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(url);
+    })
+  );
+});
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
+  const url = new URL(request.url);
 
-  // Never intercept API calls — those must always hit the network live.
-  // Caching API responses here would risk showing stale balances/expenses,
-  // which is worse than just failing when offline.
-  if (request.url.includes('/api/')) return;
+  // API requests — stale-while-revalidate for GET, network-only for mutations
+  if (url.pathname.startsWith('/api/')) {
+    if (request.method === 'GET') {
+      event.respondWith(
+        caches.open(API_CACHE).then((cache) =>
+          cache.match(request).then((cached) => {
+            const fetchPromise = fetch(request)
+              .then((resp) => {
+                if (resp.ok) cache.put(request, resp.clone());
+                return resp;
+              })
+              .catch(() => cached);
+            return cached || fetchPromise;
+          })
+        )
+      );
+    }
+    // POST/PUT/DELETE go to network — if offline, client will queue via IndexedDB
+    return;
+  }
 
-  // Navigation requests (loading the app itself): try network first so
-  // users always get the latest deployed build; fall back to cache only
-  // if genuinely offline.
+  // Navigation: network-first, fallback to cache + offline page
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(() => caches.match('/'))
+      fetch(request)
+        .then((resp) => {
+          const copy = resp.clone();
+          caches.open(SHELL_CACHE).then((c) => c.put(request, copy));
+          return resp;
+        })
+        .catch(() => caches.match(request).then((cached) => cached || caches.match('/')))
     );
     return;
   }
 
-  // Static assets (JS/CSS/images): cache-first for speed, since these are
-  // content-hashed by Vite and safe to cache aggressively.
+  // Static assets: cache-first
   event.respondWith(
-    caches.match(request).then((cached) => cached || fetch(request))
+    caches.match(request).then((cached) => {
+      if (cached) return cached;
+      return fetch(request)
+        .then((resp) => {
+          if (resp.ok) {
+            const copy = resp.clone();
+            caches.open(SHELL_CACHE).then((c) => c.put(request, copy));
+          }
+          return resp;
+        })
+        .catch(() => cached);
+    })
   );
 });

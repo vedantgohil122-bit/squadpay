@@ -20,6 +20,8 @@ import treasuryRoutes from './routes/treasury.routes.js';
 import tripRoutes from './routes/trip.routes.js';
 import personalRoutes from './routes/personal.routes.js';
 import memoryRoutes from './routes/memory.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
+import pushRoutes from './routes/push.routes.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 
 dotenv.config();
@@ -85,6 +87,8 @@ app.use('/api/treasury', treasuryRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/personal', personalRoutes);
 app.use('/api/memories', memoryRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/push', pushRoutes);
 app.use('/uploads', express.static('uploads'));
 
 // ---- 404 + central error handling (always LAST) ----

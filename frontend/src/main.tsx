@@ -12,14 +12,28 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>
 );
 
-// Register the service worker for PWA installability. This only enables
-// "Add to Home Screen" + app-shell caching — it intentionally does not
-// cache API responses (see service-worker.js comments for why).
+// Register service worker for full PWA + offline + push
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js').catch(() => {
-      // Non-fatal — the app works fine without a service worker, it just
-      // won't be installable. Never let this break the actual app.
-    });
+    navigator.serviceWorker
+      .register('/service-worker.js')
+      .then((reg) => {
+        console.log('✅ SquadPay SW registered', reg.scope);
+        // Listen for sync messages from SW
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          if (event.data?.type === 'SYNC_QUEUE') {
+            window.dispatchEvent(new Event('online'));
+          }
+        });
+      })
+      .catch((err) => console.warn('SW registration failed', err));
   });
 }
+
+// Global offline -> cache flush listener
+window.addEventListener('online', () => {
+  document.documentElement.classList.remove('is-offline');
+});
+window.addEventListener('offline', () => {
+  document.documentElement.classList.add('is-offline');
+});

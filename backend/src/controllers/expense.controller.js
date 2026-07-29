@@ -3,10 +3,11 @@ import { query, pool } from '../config/db.js';
 import { ApiError } from '../middleware/errorHandler.js';
 import { computeShares } from '../services/split.service.js';
 import { awardXp, unlockAchievement, XP } from '../services/xp.service.js';
+import { createNotificationForSquad } from './notification.controller.js';
 
 const expenseSchema = z.object({
   treasuryAmount: z.number().int().min(0).optional().default(0),
-  tripId: z.string().uuid().optional().nullable(), // paise from treasury
+  tripId: z.string().uuid().optional().nullable(),
   squadId: z.string().uuid(),
   title: z.string().min(1, 'Title required').max(80),
   amount: z.number().int().positive('Amount must be positive'), // PAISE
@@ -16,8 +17,6 @@ const expenseSchema = z.object({
   splitType: z.enum(['equal','percentage','custom','shares']).default('equal'),
   participants: z.array(z.object({ userId: z.string().uuid(), value: z.number().optional() })).min(1),
   expenseDate: z.string().optional(),
-  treasuryAmount: z.number().int().min(0).optional().default(0),
-  tripId: z.string().uuid().optional().nullable(),
 });
 
 async function assertMember(squadId, userId) {
@@ -70,6 +69,15 @@ export async function createExpense(req, res, next) {
     await unlockAchievement(d.squadId, req.user.id, 'FIRST_EXPENSE');
 
     res.status(201).json({ success: true, expense: rows[0], shares });
+
+    // Notify squad members (fire-and-forget)
+    createNotificationForSquad({
+      squadId: d.squadId,
+      excludeUserId: req.user.id,
+      type: 'expense_added',
+      message: `${req.user.name} ne "${d.title}" add kiya — ₹${(d.amount/100).toFixed(0)}`,
+      metadata: { expenseId: rows[0].id, title: d.title, amount: d.amount }
+    }).catch(()=>{});
   } catch (err) { await client.query('ROLLBACK'); next(err); }
   finally { client.release(); }
 }

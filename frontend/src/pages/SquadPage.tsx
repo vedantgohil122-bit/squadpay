@@ -8,6 +8,8 @@ import { api } from '../lib/api';
 import { toRupees, toPaise, timeAgo } from '../lib/money';
 import { useAuth } from '../store/auth';
 import { Button, Input, Modal, ErrorText, Avatar, FunLoader, ConfettiBurst, Toast, MarqueeTape, SoundToggle } from '../components/ui';
+import { ThemeToggleIcon } from '../components/ThemeToggle';
+import { NotificationBell } from '../components/NotificationBell';
 import { LINES, pick } from '../lib/hinglish';
 import { play, initSound } from '../lib/sound';
 import Memories from '../components/Memories';
@@ -87,7 +89,7 @@ export default function SquadPage() {
   const copyCode = () => { navigator.clipboard.writeText(detail!.squad.invite_code); setCopied(true); setTimeout(() => setCopied(false), 1500); };
 
   if (!detail) return (
-    <main className="flex min-h-screen flex-col" style={{ background:'#0e0c0a' }}>
+    <main className="flex min-h-screen flex-col" style={{ background:'var(--bg)' }}>
       <MarqueeTape /><div className="flex flex-1 items-center justify-center"><FunLoader /></div>
     </main>
   );
@@ -110,17 +112,19 @@ export default function SquadPage() {
     : { label:'Final Boss debt detected 💀', color:'#fb7185', pct:20 };
 
   return (
-    <main className="min-h-screen pb-36 sm:pb-24" style={{ background:'#0e0c0a' }}>
+    <main className="min-h-screen pb-36 sm:pb-24" style={{ background:'var(--bg)' }}>
       <ConfettiBurst show={confetti} />
       <Toast msg={toast} />
       <MarqueeTape />
 
       {/* NAV */}
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
-        <button onClick={() => nav('/app')} className="flex items-center gap-2 text-sm font-bold" style={{ color:'rgba(245,240,232,0.6)' }}>
+        <button onClick={() => nav('/app')} className="flex items-center gap-2 text-sm font-bold" style={{ color:'var(--text-dim)' }}>
           <ArrowLeft className="h-4 w-4" /> Squads
         </button>
         <div className="flex items-center gap-2">
+          <NotificationBell squadId={id} />
+          <ThemeToggleIcon />
           <SoundToggle />
           <button onClick={() => setTab('fun')}
             className="bbtn bbtn-ghost gap-1.5 px-3 py-1.5 text-xs"><BarChart2 className="h-3.5 w-3.5" /> Analytics</button>
@@ -134,7 +138,7 @@ export default function SquadPage() {
 
       {/* HEADER CARDS */}
       <header className="mx-auto max-w-5xl px-4 sm:px-6">
-        <h1 className="font-display text-2xl font-extrabold sm:text-3xl" style={{ color:'#f5f0e8' }}>
+        <h1 className="font-display text-2xl font-extrabold sm:text-3xl" style={{ color:'var(--text)' }}>
           {squad.emoji} {squad.name}
         </h1>
         <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
@@ -146,10 +150,10 @@ export default function SquadPage() {
             <button key={i} onClick={() => setTab(c.goTo)}
               className={`bcard ${c.border} p-3 sm:p-4 text-left w-full transition active:scale-[0.97] hover:opacity-90`}
               style={{ background:(c as any).bg }}>
-              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color:'rgba(245,240,232,0.6)' }}>{c.label}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color:'var(--text-dim)' }}>{c.label}</p>
               <p className="mt-0.5 font-display text-base font-extrabold sm:text-xl" style={{ color:c.valueColor }}>{c.value}</p>
-              {c.sub && <p className="text-[9px] font-bold mt-0.5" style={{ color:'rgba(245,240,232,0.5)' }}>{c.sub}</p>}
-              <p className="text-[9px] mt-1 opacity-50" style={{ color:'rgba(245,240,232,0.5)' }}>{c.hint} →</p>
+              {c.sub && <p className="text-[9px] font-bold mt-0.5" style={{ color:'var(--text-dim)' }}>{c.sub}</p>}
+              <p className="text-[9px] mt-1 opacity-50" style={{ color:'var(--text-dim)' }}>{c.hint} →</p>
             </button>
           ))}
         </div>
@@ -157,7 +161,7 @@ export default function SquadPage() {
         {/* Vibe Meter */}
         <div className="mt-3 bcard p-3 flex items-center gap-3">
           <p className="text-[10px] font-extrabold uppercase tracking-wider shrink-0" style={{ color:'rgba(245,240,232,0.7)' }}>🧿 Imaandari</p>
-          <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ background:'rgba(245,240,232,0.1)' }}>
+          <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ background:'var(--border-ghost)' }}>
             <motion.div initial={{ width:0 }} animate={{ width:`${vibe.pct}%` }} transition={{ duration:1, ease:'easeOut' }}
               className="h-full rounded-full" style={{ background:vibe.color }} />
           </div>
@@ -167,7 +171,7 @@ export default function SquadPage() {
 
       {/* TABS — desktop */}
       <div className="mx-auto mt-5 hidden max-w-5xl px-6 sm:block">
-        <div className="flex gap-1 rounded-2xl p-1" style={{ background:'rgba(245,240,232,0.05)', border:'2px solid rgba(245,240,232,0.1)' }}>
+        <div className="flex gap-1 rounded-2xl p-1" style={{ background:'var(--border-ghost)', border:'2px solid var(--border-ghost)' }}>
           {TABS.map(([t, label, Icon, badge]) => (
             <button key={t} onClick={() => setTab(t as any)}
               className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-bold transition`}
@@ -180,12 +184,12 @@ export default function SquadPage() {
       </div>
 
       {/* TABS — mobile bottom bar */}
-      <div className="fixed inset-x-0 bottom-0 z-30 sm:hidden" style={{ background:'rgba(14,12,10,0.95)', borderTop:'2px solid rgba(245,240,232,0.12)', backdropFilter:'blur(12px)' }}>
+      <div className="fixed inset-x-0 bottom-0 z-30 sm:hidden" style={{ background:'rgba(14,12,10,0.95)', borderTop:'2px solid var(--border)', backdropFilter:'blur(12px)' }}>
         <div className="mx-auto flex max-w-md">
           {TABS.map(([t, label, Icon, badge]) => (
             <button key={t} onClick={() => { initSound(); play('tap'); setTab(t as any); }}
               className="relative flex flex-1 flex-col items-center gap-0.5 py-3 text-[9px] font-bold uppercase"
-              style={{ color: tab===t ? '#f5a623' : 'rgba(245,240,232,0.4)' }}>
+              style={{ color: tab===t ? '#f5a623' : 'var(--text-faint)' }}>
               <Icon className="h-5 w-5" />{label}
               {badge>0 && <span className="absolute right-1/4 top-1 sticker sticker-pink" style={{ fontSize:'0.45rem' }}>{badge}</span>}
             </button>
@@ -202,7 +206,7 @@ export default function SquadPage() {
             {tab==='settle'    && (
               <div>
                 <div className="flex justify-end mb-3">
-                  <button onClick={load} className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold" style={{ background:'rgba(245,240,232,0.08)', color:'rgba(245,240,232,0.6)', border:'2px solid rgba(245,240,232,0.12)' }}>
+                  <button onClick={load} className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold" style={{ background:'var(--border-ghost)', color:'var(--text-dim)', border:'2px solid var(--border)' }}>
                     <RefreshCw className="h-3.5 w-3.5" /> Refresh
                   </button>
                 </div>
@@ -257,8 +261,8 @@ function Overview({ activity, balances, expenses, onMemberClick, squadId }: { ac
         <div className="flex items-center gap-3">
           <span className="text-2xl">🏦</span>
           <div>
-            <p className="font-display text-sm font-extrabold" style={{ color:'#f5f0e8' }}>Squad Treasury</p>
-            <p className="text-[11px]" style={{ color:'rgba(245,240,232,0.5)' }}>Contributions, spending, analytics</p>
+            <p className="font-display text-sm font-extrabold" style={{ color:'var(--text)' }}>Squad Treasury</p>
+            <p className="text-[11px]" style={{ color:'var(--text-dim)' }}>Contributions, spending, analytics</p>
           </div>
         </div>
         <span className="font-display font-extrabold" style={{ color:'#00d4c8' }}>View →</span>
@@ -268,8 +272,8 @@ function Overview({ activity, balances, expenses, onMemberClick, squadId }: { ac
         <div className="flex items-center gap-3">
           <span className="text-2xl">🧳</span>
           <div>
-            <p className="font-display text-sm font-extrabold" style={{ color:'#f5f0e8' }}>Trips</p>
-            <p className="text-[11px]" style={{ color:'rgba(245,240,232,0.5)' }}>Goa trip, movie night — sab alag alag</p>
+            <p className="font-display text-sm font-extrabold" style={{ color:'var(--text)' }}>Trips</p>
+            <p className="text-[11px]" style={{ color:'var(--text-dim)' }}>Goa trip, movie night — sab alag alag</p>
           </div>
         </div>
         <span className="font-display font-extrabold" style={{ color:'#ff3d6e' }}>View →</span>
@@ -278,27 +282,27 @@ function Overview({ activity, balances, expenses, onMemberClick, squadId }: { ac
       {/* Fun fact ticker */}
       <div className="flex items-center gap-3 rounded-2xl p-4" style={{ background:'rgba(245,166,35,0.18)', border:'2px solid #f5a623', boxShadow:'4px 4px 0 rgba(245,166,35,0.3)' }}>
         <span className="text-xl shrink-0">💡</span>
-        <p className="text-sm font-bold" style={{ color:'#f5f0e8' }}>{fact}</p>
+        <p className="text-sm font-bold" style={{ color:'var(--text)' }}>{fact}</p>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="bcard p-5">
-          <h3 className="font-display text-sm font-extrabold mb-4" style={{ color:'#f5f0e8' }}>Recent Activity</h3>
+          <h3 className="font-display text-sm font-extrabold mb-4" style={{ color:'var(--text)' }}>Recent Activity</h3>
           <ul className="space-y-3">
-            {activity.length===0 && <p className="text-sm" style={{ color:'rgba(245,240,232,0.4)' }}>Abhi kuch nahi hua — pehla kharcha add karo!</p>}
+            {activity.length===0 && <p className="text-sm" style={{ color:'var(--text-faint)' }}>Abhi kuch nahi hua — pehla kharcha add karo!</p>}
             {activity.map((a,i) => (
               <li key={i} className="flex items-baseline justify-between gap-3 text-sm">
                 <span style={{ color:'rgba(245,240,232,0.9)' }}>
                   <b>{a.name.split(' ')[0]}</b> {verbs[a.action]||a.action}
-                  {a.metadata?.title && <span style={{ color:'rgba(245,240,232,0.5)' }}> · {a.metadata.title}</span>}
+                  {a.metadata?.title && <span style={{ color:'var(--text-dim)' }}> · {a.metadata.title}</span>}
                   {a.metadata?.amount && <b style={{ color:'#f5a623' }}> {toRupees(a.metadata.amount)}</b>}
                 </span>
-                <span className="shrink-0 text-[11px]" style={{ color:'rgba(245,240,232,0.4)' }}>{timeAgo(a.created_at)}</span>
+                <span className="shrink-0 text-[11px]" style={{ color:'var(--text-faint)' }}>{timeAgo(a.created_at)}</span>
               </li>
             ))}
           </ul>
         </div>
         <div className="bcard p-5">
-          <h3 className="font-display text-sm font-extrabold mb-4" style={{ color:'#f5f0e8' }}>Balances</h3>
+          <h3 className="font-display text-sm font-extrabold mb-4" style={{ color:'var(--text)' }}>Balances</h3>
           <ul className="space-y-3">
             {balances.map((b) => (
               <li key={b.userId} className="flex items-center justify-between">
@@ -324,8 +328,8 @@ function ExpenseList({ expenses, meId, onChanged, onAdd, hasMore, loadingMore, o
   if (expenses.length===0) return (
     <div className="bcard bcard-yellow p-10 text-center">
       <motion.p animate={{ y:[0,-10,0] }} transition={{ repeat:Infinity, duration:2.4 }} className="text-5xl">🧾</motion.p>
-      <p className="mt-4 font-display font-extrabold" style={{ color:'#f5f0e8' }}>Abhi tak koi kharcha nahi hua 😮</p>
-      <p className="mt-1.5 mx-auto max-w-xs text-sm" style={{ color:'rgba(245,240,232,0.5)' }}>Ya toh squad responsible hai ya outing hui hi nahi.</p>
+      <p className="mt-4 font-display font-extrabold" style={{ color:'var(--text)' }}>Abhi tak koi kharcha nahi hua 😮</p>
+      <p className="mt-1.5 mx-auto max-w-xs text-sm" style={{ color:'var(--text-dim)' }}>Ya toh squad responsible hai ya outing hui hi nahi.</p>
       <button onClick={onAdd} className="bbtn mt-5">➕ Pehla Kharcha Likho</button>
     </div>
   );
@@ -334,24 +338,24 @@ function ExpenseList({ expenses, meId, onChanged, onAdd, hasMore, loadingMore, o
       {expenses.map((e,i) => (
         <div key={e.id} className={`bcard ${BORDER[i%4]} overflow-hidden`}>
           <button onClick={() => setOpenId(openId===e.id?null:e.id)} className="flex w-full items-center gap-3 p-4 text-left">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl" style={{ background:'rgba(245,240,232,0.1)' }}>{CE[e.category]}</div>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl" style={{ background:'var(--border-ghost)' }}>{CE[e.category]}</div>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-display font-bold" style={{ color:'#f5f0e8' }}>{e.title}</p>
-              <p className="text-xs" style={{ color:'rgba(245,240,232,0.5)' }}>{e.paid_by_name.split(' ')[0]} ne diya · {e.split_type} split</p>
+              <p className="truncate font-display font-bold" style={{ color:'var(--text)' }}>{e.title}</p>
+              <p className="text-xs" style={{ color:'var(--text-dim)' }}>{e.paid_by_name.split(' ')[0]} ne diya · {e.split_type} split</p>
             </div>
             <p className="font-display font-extrabold" style={{ color:'#f5a623' }}>{toRupees(Number(e.amount))}</p>
-            <ChevronDown className={`h-4 w-4 shrink-0 transition ${openId===e.id?'rotate-180':''}`} style={{ color:'rgba(245,240,232,0.4)' }} />
+            <ChevronDown className={`h-4 w-4 shrink-0 transition ${openId===e.id?'rotate-180':''}`} style={{ color:'var(--text-faint)' }} />
           </button>
           <AnimatePresence>
             {openId===e.id && (
               <motion.div initial={{height:0}} animate={{height:'auto'}} exit={{height:0}} className="overflow-hidden">
-                <div className="px-4 py-3" style={{ borderTop:'2px solid rgba(245,240,232,0.1)' }}>
-                  <p className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color:'rgba(245,240,232,0.4)' }}>Kisne kitna uthaya</p>
+                <div className="px-4 py-3" style={{ borderTop:'2px solid var(--border-ghost)' }}>
+                  <p className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color:'var(--text-faint)' }}>Kisne kitna uthaya</p>
                   <ul className="space-y-1.5">
                     {(e.participants||[]).map((p) => (
                       <li key={p.userId} className="flex justify-between text-sm">
                         <span style={{ color:'rgba(245,240,232,0.9)' }}>{p.name.split(' ')[0]}{p.userId===e.paid_by&&<span className="sticker ml-2">PAID</span>}</span>
-                        <span className="font-bold" style={{ color:'#f5f0e8' }}>{toRupees(p.shareAmount)}</span>
+                        <span className="font-bold" style={{ color:'var(--text)' }}>{toRupees(p.shareAmount)}</span>
                       </li>
                     ))}
                   </ul>
@@ -416,8 +420,8 @@ function Settle({ suggestions, pending, history, squadId, members, meId, onActio
                   <div className="flex items-center gap-3 mb-3">
                     <Avatar url={payer?.avatar_url} name={p.from_name} size="h-9 w-9" />
                     <div>
-                      <p className="text-sm font-bold" style={{ color:'#f5f0e8' }}><b>{p.from_name.split(' ')[0]}</b> ne {toRupees(Number(p.amount))} diya via {MM[p.method]?.emoji} {MM[p.method]?.label}</p>
-                      <p className="text-[11px]" style={{ color:'rgba(245,240,232,0.5)' }}>{p.method==='cash'?'Pocket check karo bhai':'UPI / bank check karo bhai'}</p>
+                      <p className="text-sm font-bold" style={{ color:'var(--text)' }}><b>{p.from_name.split(' ')[0]}</b> ne {toRupees(Number(p.amount))} diya via {MM[p.method]?.emoji} {MM[p.method]?.label}</p>
+                      <p className="text-[11px]" style={{ color:'var(--text-dim)' }}>{p.method==='cash'?'Pocket check karo bhai':'UPI / bank check karo bhai'}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -438,7 +442,7 @@ function Settle({ suggestions, pending, history, squadId, members, meId, onActio
             {outgoing.map((p) => (
               <div key={p.id} className="bcard flex items-center justify-between p-4">
                 <p className="text-sm" style={{ color:'rgba(245,240,232,0.9)' }}>Tum → <b>{p.to_name.split(' ')[0]}</b> · {toRupees(Number(p.amount))}</p>
-                <span className="text-[11px]" style={{ color:'rgba(245,240,232,0.4)' }}>⏳ {timeAgo(p.created_at)}</span>
+                <span className="text-[11px]" style={{ color:'var(--text-faint)' }}>⏳ {timeAgo(p.created_at)}</span>
               </div>
             ))}
           </div>
@@ -453,8 +457,8 @@ function Settle({ suggestions, pending, history, squadId, members, meId, onActio
         {suggestions.length===0 ? (
           <div className="bcard bcard-lime p-10 text-center">
             <p className="text-4xl">🧘</p>
-            <p className="mt-2 font-display font-bold" style={{ color:'#f5f0e8' }}>Sab settled. Squad at peace.</p>
-            <p className="mt-1 text-sm" style={{ color:'rgba(245,240,232,0.5)' }}>Karz mukt jeevan mubarak ho.</p>
+            <p className="mt-2 font-display font-bold" style={{ color:'var(--text)' }}>Sab settled. Squad at peace.</p>
+            <p className="mt-1 text-sm" style={{ color:'var(--text-dim)' }}>Karz mukt jeevan mubarak ho.</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -467,7 +471,7 @@ function Settle({ suggestions, pending, history, squadId, members, meId, onActio
                   </p>
                   <p className="font-display font-extrabold" style={{ color:'#00d4c8' }}>{toRupees(s.amount)}</p>
                   {s.from.userId===meId && (hasPending(s)
-                    ? <span className="text-xs" style={{ color:'rgba(245,240,232,0.4)' }}>⏳ Waiting...</span>
+                    ? <span className="text-xs" style={{ color:'var(--text-faint)' }}>⏳ Waiting...</span>
                     : <div className="flex gap-2">
                         {receiverMember?.upi_id && (
                           <a href={`upi://pay?pa=${receiverMember.upi_id}&am=${(s.amount/100).toFixed(2)}&tn=SquadPay`}
@@ -491,9 +495,9 @@ function Settle({ suggestions, pending, history, squadId, members, meId, onActio
           <div className="bcard divide-y" >
             {history.slice(0,8).map((h) => (
               <div key={h.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
-                <span style={{ color:'rgba(245,240,232,0.9)' }}>{h.from_name.split(' ')[0]} → {h.to_name.split(' ')[0]} <span style={{ color:'rgba(245,240,232,0.4)' }}>{MM[h.method]?.emoji}</span></span>
+                <span style={{ color:'rgba(245,240,232,0.9)' }}>{h.from_name.split(' ')[0]} → {h.to_name.split(' ')[0]} <span style={{ color:'var(--text-faint)' }}>{MM[h.method]?.emoji}</span></span>
                 <span className="flex items-center gap-2">
-                  <b style={{ color:'#f5f0e8' }}>{toRupees(Number(h.amount))}</b>
+                  <b style={{ color:'var(--text)' }}>{toRupees(Number(h.amount))}</b>
                   {h.status==='completed'&&<BadgeCheck className="h-4 w-4" style={{color:'#34d399'}}/>}
                   {h.status==='pending'&&<Clock className="h-4 w-4" style={{color:'#f5a623'}}/>}
                   {h.status==='cancelled'&&<XCircle className="h-4 w-4" style={{color:'#fb7185'}}/>}
@@ -513,12 +517,12 @@ function Settle({ suggestions, pending, history, squadId, members, meId, onActio
                 <button key={m.id} onClick={() => claim(choosing,m.id)} disabled={busy!==null}
                   className="bcard p-4 text-left transition active:scale-95 hover:bcard-yellow disabled:opacity-50">
                   <span className="text-2xl">{m.emoji}</span>
-                  <p className="mt-1.5 text-sm font-display font-extrabold" style={{ color:'#f5f0e8' }}>{m.label}</p>
-                  <p style={{ fontSize:'0.65rem', color:'rgba(245,240,232,0.4)' }}>{m.hint}</p>
+                  <p className="mt-1.5 text-sm font-display font-extrabold" style={{ color:'var(--text)' }}>{m.label}</p>
+                  <p style={{ fontSize:'0.65rem', color:'var(--text-faint)' }}>{m.hint}</p>
                 </button>
               ))}
             </div>
-            <p className="text-center text-[11px]" style={{ color:'rgba(245,240,232,0.4)' }}>{choosing.to.name.split(' ')[0]} ko confirm karna hoga</p>
+            <p className="text-center text-[11px]" style={{ color:'var(--text-faint)' }}>{choosing.to.name.split(' ')[0]} ko confirm karna hoga</p>
           </div>
         )}
       </Modal>
@@ -534,8 +538,8 @@ function MemberList({ members, balances, onMemberClick }: { members:Member[]; ba
       {members.length===1 && (
         <div className="bcard bcard-pink p-8 text-center">
           <motion.p animate={{ rotate:[0,6,-6,0] }} transition={{ repeat:Infinity, duration:3 }} className="text-5xl">🪑</motion.p>
-          <p className="mt-4 font-display font-extrabold" style={{ color:'#f5f0e8' }}>Squad kaafi silent lag rahi hai.</p>
-          <p className="mt-1 text-sm" style={{ color:'rgba(245,240,232,0.5)' }}>Apne dosto ko bulao — invite code upar right mein hai 👆</p>
+          <p className="mt-4 font-display font-extrabold" style={{ color:'var(--text)' }}>Squad kaafi silent lag rahi hai.</p>
+          <p className="mt-1 text-sm" style={{ color:'var(--text-dim)' }}>Apne dosto ko bulao — invite code upar right mein hai 👆</p>
         </div>
       )}
       <div className="grid gap-3 sm:grid-cols-2">
@@ -548,19 +552,19 @@ function MemberList({ members, balances, onMemberClick }: { members:Member[]; ba
               <div className="flex items-center gap-3">
                 <Avatar url={m.avatar_url} name={m.name} size="h-11 w-11" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-display font-extrabold" style={{ color:'#f5f0e8' }}>
+                  <p className="truncate font-display font-extrabold" style={{ color:'var(--text)' }}>
                     {m.name}{m.role==='admin'&&<span className="sticker ml-2">ADMIN</span>}
                   </p>
                   <p className="text-xs font-bold" style={{ color:'#f5a623' }}>Lv {m.level} · {m.level_title}</p>
-                  {m.upi_id && <p className="text-[10px]" style={{ color:'rgba(245,240,232,0.4)' }}>📱 {m.upi_id}</p>}
+                  {m.upi_id && <p className="text-[10px]" style={{ color:'var(--text-faint)' }}>📱 {m.upi_id}</p>}
                 </div>
                 <p className="font-display font-extrabold" style={{ color:(bal?.net??0)>=0?'#b8f02a':'#ff3d6e' }}>
                   {(bal?.net??0)>=0?'+':'−'}{toRupees(Math.abs(bal?.net??0))}
                 </p>
               </div>
               <div className="mt-4">
-                <div className="flex justify-between text-[10px] mb-1" style={{ color:'rgba(245,240,232,0.4)' }}><span>{m.xp} XP</span><span>next: {nx}</span></div>
-                <div className="h-2 overflow-hidden rounded-full" style={{ background:'rgba(245,240,232,0.1)' }}>
+                <div className="flex justify-between text-[10px] mb-1" style={{ color:'var(--text-faint)' }}><span>{m.xp} XP</span><span>next: {nx}</span></div>
+                <div className="h-2 overflow-hidden rounded-full" style={{ background:'var(--border-ghost)' }}>
                   <motion.div initial={{width:0}} animate={{width:`${pct}%`}} transition={{duration:0.8,ease:'easeOut'}}
                     className="h-full rounded-full" style={{ background:'#f5a623' }} />
                 </div>
@@ -621,7 +625,7 @@ function FunTab({ squadId, squadId2, expenses }: { squadId:string; squadId2:stri
     <div className="space-y-6">
       <div className="bcard bcard-yellow flex flex-wrap items-center justify-between gap-3 p-5">
         <div>
-          <h3 className="font-display font-extrabold" style={{ color:'#f5f0e8' }}>📊 Squad Wrapped</h3>
+          <h3 className="font-display font-extrabold" style={{ color:'var(--text)' }}>📊 Squad Wrapped</h3>
           <p className="text-xs" style={{ color:'rgba(14,12,10,0.7)' }}>Pura financial damage report, Spotify style.</p>
         </div>
         <button onClick={() => nav(`/app/squad/${squadId2}/wrapped`)} className="bbtn gap-2"><Play className="h-4 w-4"/>Play Wrapped</button>
@@ -630,24 +634,24 @@ function FunTab({ squadId, squadId2, expenses }: { squadId:string; squadId2:stri
       <section>
         <div className="flex items-center justify-between mb-3">
           <p className="sticker sticker-lime">🏆 Leaderboards</p>
-          <div className="flex gap-1 rounded-xl p-1" style={{ background:'rgba(245,240,232,0.05)', border:'2px solid rgba(245,240,232,0.1)' }}>
+          <div className="flex gap-1 rounded-xl p-1" style={{ background:'var(--border-ghost)', border:'2px solid var(--border-ghost)' }}>
             {(['week','all'] as const).map((p) => (
               <button key={p} onClick={() => setPeriod(p)}
                 className={`rounded-lg px-3 py-1 text-xs font-bold transition ${period===p?'bg-marigold text-ink-950':''}`}
-                style={{ color: period===p?'#0e0c0a':'rgba(245,240,232,0.6)' }}>
+                style={{ color: period===p?'#0e0c0a':'var(--text-dim)' }}>
                 {p==='week'?'This week':'All time'}
               </button>
             ))}
           </div>
         </div>
         {!boards ? <FunLoader /> : boards.length===0 ? (
-          <div className="bcard p-8 text-center text-sm" style={{ color:'rgba(245,240,232,0.4)' }}>No data {period==='week'?'this week yet 😄':'yet'}</div>
+          <div className="bcard p-8 text-center text-sm" style={{ color:'var(--text-faint)' }}>No data {period==='week'?'this week yet 😄':'yet'}</div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {boards.map((b,bi) => (
               <div key={b.title} className={`bcard ${BORDER[bi%4]} p-4`}>
-                <p className="font-display text-sm font-extrabold" style={{ color:'#f5f0e8' }}>{b.emoji} {b.title}</p>
-                {b.subtitle && <p style={{ fontSize:'0.65rem', color:'rgba(245,240,232,0.4)' }}>{b.subtitle}</p>}
+                <p className="font-display text-sm font-extrabold" style={{ color:'var(--text)' }}>{b.emoji} {b.title}</p>
+                {b.subtitle && <p style={{ fontSize:'0.65rem', color:'var(--text-faint)' }}>{b.subtitle}</p>}
                 <ul className="mt-3 space-y-1.5">
                   {b.entries.map((e,i) => (
                     <li key={i} className="flex items-center justify-between text-sm">
@@ -666,25 +670,25 @@ function FunTab({ squadId, squadId2, expenses }: { squadId:string; squadId2:stri
       <section>
         <p className="sticker sticker-aqua mb-3">📊 Expense Analytics</p>
         {catSorted.length === 0 ? (
-          <div className="bcard p-8 text-center text-sm" style={{ color:'rgba(245,240,232,0.4)' }}>Koi expense nahi abhi tak 😅</div>
+          <div className="bcard p-8 text-center text-sm" style={{ color:'var(--text-faint)' }}>Koi expense nahi abhi tak 😅</div>
         ) : (
           <div className="bcard p-4 space-y-3">
-            <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color:'rgba(245,240,232,0.4)' }}>Category Breakdown</p>
+            <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color:'var(--text-faint)' }}>Category Breakdown</p>
             {catSorted.map(([cat, amt]) => {
               const pct = Math.round((amt / totalSpend) * 100);
               return (
                 <div key={cat}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-bold" style={{ color:'#f5f0e8' }}>{CE[cat]||'📦'} {cat}</span>
+                    <span className="text-sm font-bold" style={{ color:'var(--text)' }}>{CE[cat]||'📦'} {cat}</span>
                     <span className="text-xs font-bold" style={{ color:'#f5a623' }}>₹{(amt/100).toFixed(0)} ({pct}%)</span>
                   </div>
-                  <div className="h-2 rounded-full overflow-hidden" style={{ background:'rgba(245,240,232,0.08)' }}>
+                  <div className="h-2 rounded-full overflow-hidden" style={{ background:'var(--border-ghost)' }}>
                     <div className="h-full rounded-full transition-all duration-700" style={{ width:`${pct}%`, background:'#f5a623' }} />
                   </div>
                 </div>
               );
             })}
-            <p className="text-xs pt-2 border-t" style={{ color:'rgba(245,240,232,0.3)', borderColor:'rgba(245,240,232,0.1)' }}>
+            <p className="text-xs pt-2 border-t" style={{ color:'var(--text-ghost)', borderColor:'var(--border-ghost)' }}>
               Total: <span style={{ color:'#f5a623', fontWeight:700 }}>₹{(totalSpend/100).toFixed(0)}</span> across {expenses.length} expenses
             </p>
           </div>
@@ -696,9 +700,9 @@ function FunTab({ squadId, squadId2, expenses }: { squadId:string; squadId2:stri
         <p className="sticker sticker-pink mb-3">📥 Expense Export</p>
         <div className="bcard bcard-pink p-5 flex flex-wrap items-center justify-between gap-4" style={{ background:'rgba(255,61,110,0.08)' }}>
           <div>
-            <p className="font-display font-extrabold text-sm" style={{ color:'#f5f0e8' }}>Download Squad Expenses</p>
-            <p className="text-xs mt-0.5" style={{ color:'rgba(245,240,232,0.5)' }}>CSV format — open in Excel, Google Sheets, ya kuch bhi 📊</p>
-            <p className="text-xs mt-0.5" style={{ color:'rgba(245,240,232,0.4)' }}>{expenses.length} expenses ready to export</p>
+            <p className="font-display font-extrabold text-sm" style={{ color:'var(--text)' }}>Download Squad Expenses</p>
+            <p className="text-xs mt-0.5" style={{ color:'var(--text-dim)' }}>CSV format — open in Excel, Google Sheets, ya kuch bhi 📊</p>
+            <p className="text-xs mt-0.5" style={{ color:'var(--text-faint)' }}>{expenses.length} expenses ready to export</p>
           </div>
           <button onClick={exportCSV} disabled={exporting || expenses.length === 0}
             className="bbtn bbtn-pink gap-2 disabled:opacity-50">

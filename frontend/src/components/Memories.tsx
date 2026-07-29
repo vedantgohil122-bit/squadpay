@@ -98,8 +98,8 @@ export default function Memories({ squadId, isAdmin }: { squadId: string; isAdmi
       {memories.length === 0 ? (
         <div className="bcard p-10 text-center">
           <motion.p animate={{ rotate: [0, -8, 8, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="text-5xl">📸</motion.p>
-          <p className="mt-4 font-display font-extrabold" style={{ color: '#f5f0e8' }}>Sirf kharche track karoge ya yaadein bhi banaoge?</p>
-          <p className="mt-1.5 text-sm" style={{ color: 'rgba(245,240,232,0.5)' }}>Photos upload karo aur outing ko memory banao.</p>
+          <p className="mt-4 font-display font-extrabold" style={{ color:'var(--text)' }}>Sirf kharche track karoge ya yaadein bhi banaoge?</p>
+          <p className="mt-1.5 text-sm" style={{ color:'var(--text-dim)' }}>Photos upload karo aur outing ko memory banao.</p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
@@ -161,12 +161,12 @@ function MemoryCard({ m, meId, isAdmin, onReact, onDelete, onChanged }: {
         {/* UPLOADER ROW */}
         <div className="flex items-center gap-2.5 mb-2">
           <Avatar url={m.uploader_avatar} name={m.uploader_name} size="h-7 w-7" />
-          <p className="flex-1 truncate text-xs font-bold" style={{ color: '#f5f0e8' }}>
+          <p className="flex-1 truncate text-xs font-bold" style={{ color:'var(--text)' }}>
             {m.uploader_name.split(' ')[0]}
-            <span className="ml-1.5 font-normal" style={{ color: 'rgba(245,240,232,0.4)' }}>· {timeAgo(m.created_at)}</span>
+            <span className="ml-1.5 font-normal" style={{ color:'var(--text-faint)' }}>· {timeAgo(m.created_at)}</span>
           </p>
         </div>
-        {m.caption && <p className="text-sm mb-3" style={{ color: '#f5f0e8' }}>{m.caption}</p>}
+        {m.caption && <p className="text-sm mb-3" style={{ color:'var(--text)' }}>{m.caption}</p>}
 
         {/* REACTION BAR — Instagram style */}
         <div className="flex flex-wrap items-center gap-1.5 mb-3">
@@ -177,16 +177,16 @@ function MemoryCard({ m, meId, isAdmin, onReact, onDelete, onChanged }: {
               <button key={e} onClick={() => onReact(m.id, e)}
                 className={`flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm font-bold transition active:scale-90 ${isMe ? 'ring-2 ring-offset-0' : ''}`}
                 style={{
-                  background: isMe ? 'rgba(245,166,35,0.2)' : 'rgba(245,240,232,0.06)',
-                  border: isMe ? '2px solid rgba(245,166,35,0.6)' : '2px solid rgba(245,240,232,0.1)',
+                  background: isMe ? 'rgba(245,166,35,0.2)' : 'var(--border-ghost)',
+                  border: isMe ? '2px solid rgba(245,166,35,0.6)' : '2px solid var(--border-ghost)',
                 }}>
                 {e}
-                {count > 0 && <span style={{ fontSize: '0.7rem', color: isMe ? '#f5a623' : 'rgba(245,240,232,0.6)' }}>{count}</span>}
+                {count > 0 && <span style={{ fontSize: '0.7rem', color: isMe ? '#f5a623' : 'var(--text-dim)' }}>{count}</span>}
               </button>
             );
           })}
           {totalReactions > 0 && (
-            <span className="ml-auto text-[11px]" style={{ color: 'rgba(245,240,232,0.4)' }}>
+            <span className="ml-auto text-[11px]" style={{ color:'var(--text-faint)' }}>
               <Heart className="inline h-3 w-3 mr-0.5" />{totalReactions}
             </span>
           )}
@@ -195,7 +195,7 @@ function MemoryCard({ m, meId, isAdmin, onReact, onDelete, onChanged }: {
         {/* COMMENTS TOGGLE */}
         <button onClick={() => setShowComments(!showComments)}
           className="flex items-center gap-1.5 text-[11px] font-bold mb-2"
-          style={{ color: 'rgba(245,240,232,0.5)' }}>
+          style={{ color:'var(--text-dim)' }}>
           <MessageCircle className="h-3.5 w-3.5" />
           {comments.length === 0 ? 'Pehla comment tumhara? 👀' : `${comments.length} comment${comments.length > 1 ? 's' : ''}`}
         </button>
@@ -203,7 +203,7 @@ function MemoryCard({ m, meId, isAdmin, onReact, onDelete, onChanged }: {
         <AnimatePresence>
           {showComments && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-              <div className="pt-2 space-y-2" style={{ borderTop: '2px solid rgba(245,240,232,0.08)' }}>
+              <div className="pt-2 space-y-2" style={{ borderTop: '2px solid var(--border-ghost)' }}>
                 {comments.map((c) => (
                   <p key={c.id} className="text-xs" style={{ color: 'rgba(245,240,232,0.8)' }}>
                     <b style={{ color: '#f5a623' }}>{c.name.split(' ')[0]}</b>

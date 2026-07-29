@@ -1,123 +1,258 @@
 @import "tailwindcss";
 
 /* ============================================================
-   SQUADPAY v3 — DESI NEO-BRUTALIST DESIGN SYSTEM
+   SQUADPAY v4 — DESI NEO-BRUTALIST + DUAL THEME
    Personality: Street poster × Meme sticker × Scoreboard
    Palette: Warm black, Marigold, Hot pink, Lime, Bone white
+   Themes: dark (default) + light via [data-theme]
    ============================================================ */
 @theme {
   --font-display: "Sora", system-ui, sans-serif;
   --font-body:    "Inter", system-ui, sans-serif;
 
-  /* Backgrounds */
+  /* Dark defaults (Tailwind utilities) */
   --color-ink-950: #0e0c0a;
   --color-ink-900: #161310;
   --color-ink-800: #211d18;
 
-  /* Brand */
   --color-marigold:  #f5a623;
   --color-hot-pink:  #ff3d6e;
   --color-lime:      #b8f02a;
   --color-aqua:      #00d4c8;
   --color-bone:      #f5f0e8;
 
-  /* Status */
   --color-mint:  #34d399;
   --color-rose:  #fb7185;
 
-  /* Glass kept for overlays only */
   --color-glass: #ffffff0a;
+}
+
+/* Semantic tokens that flip with theme */
+:root {
+  --bg: #0e0c0a;
+  --bg-rgb: 14 12 10;
+  --card: #161310;
+  --card-soft: #211d18;
+  --card-elevated: #211d18;
+  --text: #f5f0e8;
+  --text-dim: rgba(245,240,232,0.6);
+  --text-faint: rgba(245,240,232,0.4);
+  --text-ghost: rgba(245,240,232,0.25);
+  --border: rgba(245,240,232,0.15);
+  --border-strong: rgba(245,240,232,0.2);
+  --border-ghost: rgba(245,240,232,0.08);
+  --bone-rgb: 245 240 232;
+  --ink-rgb: 14 12 10;
+  --marigold: #f5a623;
+  --hot-pink: #ff3d6e;
+  --lime: #b8f02a;
+  --aqua: #00d4c8;
+  color-scheme: dark;
+}
+
+html[data-theme='light'] {
+  --color-ink-950: #fdf8ec;
+  --color-ink-900: #ffffff;
+  --color-ink-800: #f5efe0;
+  --color-bone: #1a1612;
+  --color-glass: #00000008;
+
+  --bg: #fdf8ec;
+  --bg-rgb: 253 248 236;
+  --card: #ffffff;
+  --card-soft: #f7f1e2;
+  --card-elevated: #ffffff;
+  --text: #1a1612;
+  --text-dim: rgba(26,22,18,0.62);
+  --text-faint: rgba(26,22,18,0.42);
+  --text-ghost: rgba(26,22,18,0.22);
+  --border: rgba(26,22,18,0.12);
+  --border-strong: rgba(26,22,18,0.18);
+  --border-ghost: rgba(26,22,18,0.07);
+  --bone-rgb: 26 22 18;
+  --ink-rgb: 253 248 236;
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
 
+html {
+  background: var(--bg);
+}
+
 body {
-  background: var(--color-ink-950);
-  color: var(--color-bone);
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--font-body);
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 /* ---- BRUTALIST CARD ---- */
 .bcard {
-  background: var(--color-ink-900);
-  border: 2px solid rgba(245,240,232,0.2);
+  background: var(--card);
+  border: 2px solid var(--border-strong);
   border-radius: 1rem;
-  box-shadow: 4px 4px 0 rgba(245,240,232,0.12);
-  transition: box-shadow 0.12s, transform 0.12s;
+  box-shadow: 4px 4px 0 rgba(var(--bone-rgb) / 0.12);
+  transition: box-shadow 0.12s, transform 0.12s, background 0.25s, border-color 0.25s;
 }
-.bcard:hover { box-shadow: 6px 6px 0 rgba(245,240,232,0.18); transform: translate(-1px,-1px); }
+.bcard:hover { 
+  box-shadow: 6px 6px 0 rgba(var(--bone-rgb) / 0.18); 
+  transform: translate(-1px,-1px); 
+}
+
+html[data-theme='light'] .bcard {
+  box-shadow: 4px 4px 0 rgba(var(--bone-rgb) / 0.10);
+}
+html[data-theme='light'] .bcard:hover {
+  box-shadow: 6px 6px 0 rgba(var(--bone-rgb) / 0.16);
+}
 
 /* ---- ACCENT CARD (marigold border) ---- */
-.bcard-yellow { border-color: var(--color-marigold); box-shadow: 4px 4px 0 var(--color-marigold); }
-.bcard-pink   { border-color: var(--color-hot-pink); box-shadow: 4px 4px 0 var(--color-hot-pink); }
-.bcard-lime   { border-color: var(--color-lime);     box-shadow: 4px 4px 0 var(--color-lime); }
-.bcard-aqua   { border-color: var(--color-aqua);     box-shadow: 4px 4px 0 var(--color-aqua); }
+.bcard-yellow { border-color: var(--marigold); box-shadow: 4px 4px 0 var(--marigold); }
+.bcard-pink   { border-color: var(--hot-pink); box-shadow: 4px 4px 0 var(--hot-pink); }
+.bcard-lime   { border-color: var(--lime);     box-shadow: 4px 4px 0 var(--lime); }
+.bcard-aqua   { border-color: var(--aqua);     box-shadow: 4px 4px 0 var(--aqua); }
 
 /* ---- BRUTALIST BUTTON ---- */
 .bbtn {
   display: inline-flex; align-items: center; gap: 0.4rem;
   font-family: var(--font-display); font-weight: 700;
-  border: 2px solid var(--color-bone); border-radius: 0.75rem;
+  border: 2px solid var(--text); border-radius: 0.75rem;
   padding: 0.6rem 1.25rem; font-size: 0.875rem;
-  background: var(--color-marigold); color: var(--color-ink-950);
-  box-shadow: 3px 3px 0 var(--color-bone);
-  transition: box-shadow 0.1s, transform 0.1s;
+  background: var(--marigold); color: var(--bg);
+  box-shadow: 3px 3px 0 var(--text);
+  transition: box-shadow 0.1s, transform 0.1s, background 0.2s;
   cursor: pointer;
 }
-.bbtn:hover  { box-shadow: 5px 5px 0 var(--color-bone); transform: translate(-1px,-1px); }
-.bbtn:active { box-shadow: 1px 1px 0 var(--color-bone); transform: translate(2px,2px); }
-.bbtn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: 3px 3px 0 var(--color-bone); }
+.bbtn:hover  { box-shadow: 5px 5px 0 var(--text); transform: translate(-1px,-1px); }
+.bbtn:active { box-shadow: 1px 1px 0 var(--text); transform: translate(2px,2px); }
+.bbtn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: 3px 3px 0 var(--text); }
+
+html[data-theme='dark'] .bbtn {
+  border-color: var(--color-bone);
+  box-shadow: 3px 3px 0 var(--color-bone);
+  color: #0e0c0a;
+}
+html[data-theme='dark'] .bbtn:hover { box-shadow: 5px 5px 0 var(--color-bone); }
+html[data-theme='dark'] .bbtn:active { box-shadow: 1px 1px 0 var(--color-bone); }
+
+/* Keep primary readable in both themes */
+.bbtn {
+  color: #0e0c0a;
+}
 
 .bbtn-ghost {
-  background: transparent; color: var(--color-bone);
-  border: 2px solid rgba(245,240,232,0.3);
-  box-shadow: 3px 3px 0 rgba(245,240,232,0.15);
+  background: transparent; color: var(--text);
+  border: 2px solid var(--border-strong);
+  box-shadow: 3px 3px 0 var(--border);
 }
-.bbtn-ghost:hover { box-shadow: 5px 5px 0 rgba(245,240,232,0.25); transform: translate(-1px,-1px); }
-.bbtn-ghost:active { box-shadow: 1px 1px 0 rgba(245,240,232,0.15); transform: translate(2px,2px); }
+.bbtn-ghost:hover { box-shadow: 5px 5px 0 var(--border-strong); transform: translate(-1px,-1px); }
+.bbtn-ghost:active { box-shadow: 1px 1px 0 var(--border); transform: translate(2px,2px); }
 
-.bbtn-pink  { background: var(--color-hot-pink); }
-.bbtn-lime  { background: var(--color-lime); }
-.bbtn-aqua  { background: var(--color-aqua); }
+.bbtn-pink  { background: var(--hot-pink); }
+.bbtn-lime  { background: var(--lime); }
+.bbtn-aqua  { background: var(--aqua); }
 
 /* ---- STICKER badge (rotated label) ---- */
 .sticker {
   display: inline-block;
-  background: var(--color-marigold); color: var(--color-ink-950);
+  background: var(--marigold); color: #0e0c0a;
   font-family: var(--font-display); font-weight: 800;
   font-size: 0.65rem; letter-spacing: 0.06em; text-transform: uppercase;
   padding: 0.15rem 0.6rem; border-radius: 999px;
-  border: 2px solid var(--color-ink-950);
+  border: 2px solid var(--bg);
   transform: rotate(-2deg);
 }
-.sticker-pink { background: var(--color-hot-pink); color: var(--color-bone); }
-.sticker-lime { background: var(--color-lime); }
-.sticker-aqua { background: var(--color-aqua); }
+.sticker-pink { background: var(--hot-pink); color: white; }
+.sticker-lime { background: var(--lime); color: #0e0c0a; }
+.sticker-aqua { background: var(--aqua); color: #0e0c0a; }
 
 /* ---- INPUT ---- */
 .binput {
-  width: 100%; background: var(--color-ink-800);
-  border: 2px solid rgba(245,240,232,0.2); border-radius: 0.75rem;
-  padding: 0.65rem 1rem; font-size: 0.875rem; color: var(--color-bone);
-  outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%; 
+  background: var(--card-soft);
+  border: 2px solid var(--border-strong); border-radius: 0.75rem;
+  padding: 0.65rem 1rem; font-size: 0.875rem; 
+  color: var(--text);
+  outline: none; 
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.25s, color 0.25s;
 }
-.binput::placeholder { color: rgba(245,240,232,0.3); }
-.binput:focus { border-color: var(--color-marigold); box-shadow: 0 0 0 3px rgba(245,166,35,0.15); }
+.binput::placeholder { color: var(--text-faint); }
+.binput:focus { border-color: var(--marigold); box-shadow: 0 0 0 3px rgba(245,166,35,0.15); }
 
 /* ---- MARQUEE tape ---- */
-.marquee-wrap { overflow: hidden; background: var(--color-marigold); border-top: 2px solid var(--color-ink-950); border-bottom: 2px solid var(--color-ink-950); }
+.marquee-wrap { 
+  overflow: hidden; 
+  background: var(--marigold); 
+  border-top: 2px solid var(--bg); 
+  border-bottom: 2px solid var(--bg); 
+}
 .marquee-inner { display: flex; gap: 3rem; width: max-content; animation: marquee 22s linear infinite; }
-.marquee-inner span { white-space: nowrap; font-family: var(--font-display); font-weight: 800; font-size: 0.8rem; letter-spacing: 0.06em; color: var(--color-ink-950); }
+.marquee-inner span { white-space: nowrap; font-family: var(--font-display); font-weight: 800; font-size: 0.8rem; letter-spacing: 0.06em; color: #0e0c0a; }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 /* ---- UTILITY ---- */
 .font-display { font-family: var(--font-display); }
-.glass { background: var(--color-glass); border: 1px solid rgba(245,240,232,0.1); backdrop-filter: blur(16px); border-radius: 1.25rem; }
+.glass { 
+  background: var(--color-glass); 
+  border: 1px solid var(--border); 
+  backdrop-filter: blur(16px); 
+  border-radius: 1.25rem; 
+}
+.bg-app { background: var(--bg); }
+.bg-card { background: var(--card); }
+.text-primary { color: var(--text); }
+.text-dim { color: var(--text-dim); }
 
 /* ---- SCROLLBAR ---- */
-::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: var(--color-ink-900); } ::-webkit-scrollbar-thumb { background: rgba(245,240,232,0.2); border-radius: 99px; }
+::-webkit-scrollbar { width: 6px; height: 6px; } 
+::-webkit-scrollbar-track { background: var(--card); } 
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+
+/* Theme transition for common hard-coded usages */
+button, a, input, textarea, select, div {
+  /* smooth transition for theme switch on key props */
+}
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
+}
+
+/* Light mode specific overrides for brutalist shadows that used bone */
+html[data-theme='light'] .bcard-yellow,
+html[data-theme='light'] .bcard-pink,
+html[data-theme='light'] .bcard-lime,
+html[data-theme='light'] .bcard-aqua {
+  /* keep colored shadows but slightly softer for light */
+  filter: saturate(0.95);
+}
+
+/* Ensure modals/overlays adapt */
+.theme-overlay {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Fix for legacy hardcoded colors that we will progressively migrate */
+[style*="#0e0c0a"] {
+  transition: background-color 0.25s, color 0.25s;
+}
+
+/* Offline banner */
+.offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: var(--hot-pink);
+  color: white;
+  text-align: center;
+  font-weight: 700;
+  font-family: var(--font-display);
+  padding: 6px 12px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
 }

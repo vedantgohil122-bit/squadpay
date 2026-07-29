@@ -131,7 +131,7 @@ export const SoundToggle = ({ className = '' }: { className?: string }) => {
   };
   return (
     <button onClick={toggle} className={`rounded-lg p-2 transition active:scale-90 ${className}`}
-      style={{ color: on ? 'rgba(245,240,232,0.6)' : 'rgba(245,240,232,0.25)' }}
+      style={{ color: on ? 'var(--text-dim)' : 'rgba(245,240,232,0.25)' }}
       title={on ? 'Sound on' : 'Sound off'}>
       {on ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
     </button>

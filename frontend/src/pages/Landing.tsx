@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { IndianRupee, Zap, Users, Trophy, ArrowRight } from 'lucide-react';
 import { MarqueeTape } from '../components/ui';
+import { ThemeToggle } from '../components/ThemeToggle';
 import { LINES } from '../lib/hinglish';
 
 const HERO = [
@@ -31,14 +32,15 @@ export default function Landing() {
   useEffect(() => { const t = setInterval(() => setHi((n) => (n + 1) % HERO.length), 3200); return () => clearInterval(t); }, []);
 
   return (
-    <main className="min-h-screen" style={{ background: '#0e0c0a' }}>
+    <main className="min-h-screen" style={{ background:'var(--bg)' }}>
       {/* NAV */}
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
-        <span className="font-display text-xl font-extrabold" style={{ color: '#f5f0e8' }}>
+        <span className="font-display text-xl font-extrabold" style={{ color:'var(--text)' }}>
           Squad<span style={{ color: '#f5a623' }}>Pay</span>
           <span className="sticker ml-2" style={{ fontSize: '0.55rem' }}>BETA</span>
         </span>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <ThemeToggle />
           <Link to="/login" className="bbtn bbtn-ghost px-4 py-2 text-sm">Login</Link>
           <Link to="/register" className="bbtn px-4 py-2 text-sm">Squad Banao →</Link>
         </div>
@@ -58,14 +60,14 @@ export default function Landing() {
               <AnimatePresence mode="wait">
                 <motion.h1 key={hi} initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -40, opacity: 0 }}
                   transition={{ duration: 0.5, ease: 'easeOut' }}
-                  className="font-display text-4xl font-extrabold leading-[1.1] sm:text-5xl lg:text-6xl" style={{ color: '#f5f0e8' }}>
+                  className="font-display text-4xl font-extrabold leading-[1.1] sm:text-5xl lg:text-6xl" style={{ color:'var(--text)' }}>
                   {HERO[hi].split('\n').map((line, i) => (
                     <span key={i}>{i === 1 ? <span style={{ color: '#f5a623' }}>{line}</span> : line}<br /></span>
                   ))}
                 </motion.h1>
               </AnimatePresence>
             </div>
-            <p className="mt-4 max-w-md text-base" style={{ color: 'rgba(245,240,232,0.6)' }}>
+            <p className="mt-4 max-w-md text-base" style={{ color:'var(--text-dim)' }}>
               The fun way to split bills, trips, food runs, and squad chaos. Hinglish personality included.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -88,7 +90,7 @@ export default function Landing() {
               <span className="sticker">4 members</span>
             </div>
             <div className="mb-3 rounded-xl bg-ink-800 p-4">
-              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'rgba(245,240,232,0.5)' }}>Squad spend</p>
+              <p className="text-xs font-bold uppercase tracking-wider" style={{ color:'var(--text-dim)' }}>Squad spend</p>
               <p className="font-display text-3xl font-extrabold" style={{ color: '#f5a623' }}>₹12,400</p>
             </div>
             {[
@@ -96,8 +98,8 @@ export default function Landing() {
               { name: 'Rahul', net: '-₹1,800', green: false },
               { name: 'Arjun', net: '-₹1,400', green: false },
             ].map((m) => (
-              <div key={m.name} className="flex justify-between py-2 text-sm" style={{ borderBottom: '1px solid rgba(245,240,232,0.1)' }}>
-                <span style={{ color: '#f5f0e8' }}>{m.name}</span>
+              <div key={m.name} className="flex justify-between py-2 text-sm" style={{ borderBottom: '1px solid var(--border-ghost)' }}>
+                <span style={{ color:'var(--text)' }}>{m.name}</span>
                 <b style={{ color: m.green ? '#34d399' : '#fb7185' }}>{m.net}</b>
               </div>
             ))}
@@ -109,16 +111,16 @@ export default function Landing() {
       {/* FEATURES */}
       <section className="mx-auto max-w-5xl px-5 pb-16">
         <div className="mb-8 flex items-center gap-4">
-          <h2 className="font-display text-2xl font-extrabold" style={{ color: '#f5f0e8' }}>Kya kya milega?</h2>
-          <div style={{ flex: 1, height: 2, background: 'rgba(245,240,232,0.1)' }} />
+          <h2 className="font-display text-2xl font-extrabold" style={{ color:'var(--text)' }}>Kya kya milega?</h2>
+          <div style={{ flex: 1, height: 2, background: 'var(--border-ghost)' }} />
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map((f, i) => (
             <motion.div key={f.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
               <div className={`bcard ${f.color} h-full p-5`}>
                 <f.icon className="h-7 w-7 mb-3" style={{ color: '#f5a623' }} />
-                <h3 className="font-display text-sm font-extrabold mb-1" style={{ color: '#f5f0e8' }}>{f.title}</h3>
-                <p className="text-xs leading-relaxed" style={{ color: 'rgba(245,240,232,0.6)' }}>{f.desc}</p>
+                <h3 className="font-display text-sm font-extrabold mb-1" style={{ color:'var(--text)' }}>{f.title}</h3>
+                <p className="text-xs leading-relaxed" style={{ color:'var(--text-dim)' }}>{f.desc}</p>
               </div>
             </motion.div>
           ))}
@@ -126,14 +128,14 @@ export default function Landing() {
       </section>
 
       {/* TESTIMONIALS */}
-      <section style={{ borderTop: '2px solid rgba(245,240,232,0.1)' }} className="mx-auto max-w-5xl px-5 py-14">
-        <h2 className="mb-6 font-display text-2xl font-extrabold text-center" style={{ color: '#f5f0e8' }}>Squad ki reviews 😂</h2>
+      <section style={{ borderTop: '2px solid var(--border-ghost)' }} className="mx-auto max-w-5xl px-5 py-14">
+        <h2 className="mb-6 font-display text-2xl font-extrabold text-center" style={{ color:'var(--text)' }}>Squad ki reviews 😂</h2>
         <div className="grid gap-4 sm:grid-cols-3">
           {TESTIMONIALS.map((t, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
               <div className={`bcard ${['bcard-yellow','bcard-pink','bcard-lime'][i]} p-5 h-full`}>
-                <p className="text-sm leading-relaxed mb-3" style={{ color: '#f5f0e8' }}>{t.text}</p>
-                <p className="text-xs" style={{ color: 'rgba(245,240,232,0.5)' }}>— {t.name}</p>
+                <p className="text-sm leading-relaxed mb-3" style={{ color:'var(--text)' }}>{t.text}</p>
+                <p className="text-xs" style={{ color:'var(--text-dim)' }}>— {t.name}</p>
                 <span className="sticker mt-2 inline-block">{t.sticker}</span>
               </div>
             </motion.div>
@@ -143,8 +145,8 @@ export default function Landing() {
 
       {/* FOOTER CTA */}
       <MarqueeTape />
-      <footer className="py-10 text-center" style={{ borderTop: '2px solid rgba(245,240,232,0.1)' }}>
-        <p className="font-display text-sm font-bold" style={{ color: 'rgba(245,240,232,0.4)' }}>
+      <footer className="py-10 text-center" style={{ borderTop: '2px solid var(--border-ghost)' }}>
+        <p className="font-display text-sm font-bold" style={{ color:'var(--text-faint)' }}>
           SquadPay — Squad ka official finance headquarters 💚
         </p>
       </footer>

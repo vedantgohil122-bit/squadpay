@@ -110,9 +110,9 @@ export default function Wrapped() {
   }, [w, aiCaptions]);
 
   if (!w || generatingCaptions) return (
-    <main className="fixed inset-0 flex flex-col items-center justify-center gap-3" style={{ background:'#0e0c0a' }}>
+    <main className="fixed inset-0 flex flex-col items-center justify-center gap-3" style={{ background:'var(--bg)' }}>
       <FunLoader />
-      {generatingCaptions && <p className="text-xs" style={{ color:'rgba(245,240,232,0.4)' }}>AI captions generate ho rahe hain...</p>}
+      {generatingCaptions && <p className="text-xs" style={{ color:'var(--text-faint)' }}>AI captions generate ho rahe hain...</p>}
     </main>
   );
 

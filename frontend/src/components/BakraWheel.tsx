@@ -48,7 +48,7 @@ export default function BakraWheel({ open, onClose, members }: { open: boolean; 
   return (
     <Modal open={open} onClose={onClose} title="🎡 Bakra Wheel — Kaun Bharega?">
       <div className="flex flex-col items-center gap-5">
-        <p className="text-xs text-center" style={{ color: 'rgba(245,240,232,0.5)' }}>
+        <p className="text-xs text-center" style={{ color:'var(--text-dim)' }}>
           Spin karo — destiny decide karegi kaun pay karega aaj 💀
         </p>
 
@@ -78,8 +78,8 @@ export default function BakraWheel({ open, onClose, members }: { open: boolean; 
         {winner && !spinning && (
           <motion.div initial={{ scale: 0, rotate: -10 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', bounce: 0.5 }}
             className="bcard bcard-pink w-full p-4 text-center">
-            <p className="font-display text-2xl font-extrabold" style={{ color: '#f5f0e8' }}>{winner.name.split(' ')[0]} 💀</p>
-            <p className="mt-1 text-sm" style={{ color: 'rgba(245,240,232,0.6)' }}>Aaj ka bakra mil gaya. Screenshot le lo. 📸</p>
+            <p className="font-display text-2xl font-extrabold" style={{ color:'var(--text)' }}>{winner.name.split(' ')[0]} 💀</p>
+            <p className="mt-1 text-sm" style={{ color:'var(--text-dim)' }}>Aaj ka bakra mil gaya. Screenshot le lo. 📸</p>
           </motion.div>
         )}
 

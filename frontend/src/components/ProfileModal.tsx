@@ -132,10 +132,10 @@ export default function ProfileModal({ open, onClose }: { open: boolean; onClose
           <div className="relative">
             {avatar ? (
               <img src={avatar} alt="avatar" className="h-20 w-20 rounded-full border-4"
-                style={{ borderColor: '#f5a623', background: '#1a1612' }} />
+                style={{ borderColor: '#f5a623', background:'var(--card)' }} />
             ) : (
               <div className="h-20 w-20 rounded-full border-4 flex items-center justify-center font-display font-extrabold text-2xl"
-                style={{ borderColor: '#f5a623', background: '#1a1612', color: '#f5a623' }}>
+                style={{ borderColor: '#f5a623', background:'var(--card)', color: '#f5a623' }}>
                 {name[0] || '?'}
               </div>
             )}
@@ -147,15 +147,15 @@ export default function ProfileModal({ open, onClose }: { open: boolean; onClose
             <input ref={fileRef} type="file" accept="image/*" className="hidden"
               onChange={(e) => { handleFileChange(e.target.files?.[0] || null); setTab('upload'); }} />
           </div>
-          <p style={{ fontSize: '0.7rem', color: 'rgba(245,240,232,0.4)' }}>Tap camera to upload photo</p>
+          <p style={{ fontSize: '0.7rem', color:'var(--text-faint)' }}>Tap camera to upload photo</p>
         </div>
 
         {/* TAB SWITCHER */}
-        <div className="flex gap-1 rounded-xl p-1" style={{ background: 'rgba(245,240,232,0.05)', border: '2px solid rgba(245,240,232,0.1)' }}>
+        <div className="flex gap-1 rounded-xl p-1" style={{ background: 'var(--border-ghost)', border: '2px solid var(--border-ghost)' }}>
           {TABS.map(({ id, label, icon: Icon }) => (
             <button key={id} type="button" onClick={() => setTab(id)}
               className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-[11px] font-bold transition"
-              style={{ background: tab === id ? '#f5a623' : 'transparent', color: tab === id ? '#0e0c0a' : 'rgba(245,240,232,0.5)' }}>
+              style={{ background: tab === id ? '#f5a623' : 'transparent', color: tab === id ? '#0e0c0a' : 'var(--text-dim)' }}>
               <Icon size={12} /> {label}
             </button>
           ))}
@@ -170,9 +170,9 @@ export default function ProfileModal({ open, onClose }: { open: boolean; onClose
                 <button key={s.id} type="button" onClick={() => setSelectedStyle(s.id)}
                   className="rounded-xl px-2.5 py-1.5 text-[11px] font-bold border-2 transition active:scale-95"
                   style={{
-                    background: selectedStyle === s.id ? 'rgba(245,166,35,0.2)' : 'rgba(245,240,232,0.05)',
-                    borderColor: selectedStyle === s.id ? '#f5a623' : 'rgba(245,240,232,0.15)',
-                    color: selectedStyle === s.id ? '#f5a623' : 'rgba(245,240,232,0.6)',
+                    background: selectedStyle === s.id ? 'rgba(245,166,35,0.2)' : 'var(--border-ghost)',
+                    borderColor: selectedStyle === s.id ? '#f5a623' : 'var(--border)',
+                    color: selectedStyle === s.id ? '#f5a623' : 'var(--text-dim)',
                   }}>
                   {s.emoji} {s.label}
                 </button>
@@ -185,8 +185,8 @@ export default function ProfileModal({ open, onClose }: { open: boolean; onClose
                 <button key={url} type="button" onClick={() => setAvatar(url)}
                   className="rounded-2xl p-1 border-2 transition active:scale-90"
                   style={{
-                    background: '#1a1612',
-                    borderColor: avatar === url ? '#f5a623' : 'rgba(245,240,232,0.1)',
+                    background:'var(--card)',
+                    borderColor: avatar === url ? '#f5a623' : 'var(--border-ghost)',
                     boxShadow: avatar === url ? '0 0 0 2px rgba(245,166,35,0.3)' : 'none',
                   }}>
                   <img src={url} alt="avatar option" className="aspect-square w-full rounded-xl" loading="lazy" />
@@ -196,7 +196,7 @@ export default function ProfileModal({ open, onClose }: { open: boolean; onClose
 
             <button type="button" onClick={() => setSalt((s) => s + 1)}
               className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold border-2 transition active:scale-95"
-              style={{ background: 'rgba(245,240,232,0.05)', borderColor: 'rgba(245,240,232,0.15)', color: 'rgba(245,240,232,0.6)' }}>
+              style={{ background: 'var(--border-ghost)', borderColor: 'var(--border)', color:'var(--text-dim)' }}>
               <Shuffle size={14} /> Naye options
             </button>
           </div>
@@ -207,19 +207,19 @@ export default function ProfileModal({ open, onClose }: { open: boolean; onClose
           <div>
             <button type="button" onClick={() => fileRef.current?.click()}
               className="w-full rounded-2xl border-2 border-dashed p-8 text-center transition hover:opacity-80"
-              style={{ borderColor: uploadPreview ? '#f5a623' : 'rgba(245,240,232,0.2)', background: 'rgba(245,240,232,0.03)' }}>
+              style={{ borderColor: uploadPreview ? '#f5a623' : 'var(--border-strong)', background: 'var(--border-ghost)' }}>
               {uploadPreview ? (
                 <div className="flex flex-col items-center gap-2">
                   <img src={uploadPreview} alt="preview" className="h-24 w-24 rounded-full object-cover border-4"
                     style={{ borderColor: '#f5a623' }} />
                   <p style={{ fontSize: '0.75rem', color: '#f5a623', fontWeight: 700 }}>Photo ready! ✅</p>
-                  <p style={{ fontSize: '0.65rem', color: 'rgba(245,240,232,0.4)' }}>Tap to change</p>
+                  <p style={{ fontSize: '0.65rem', color:'var(--text-faint)' }}>Tap to change</p>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-3">
                   <Upload size={32} color="rgba(245,240,232,0.3)" />
-                  <p style={{ fontSize: '0.875rem', fontWeight: 700, color: 'rgba(245,240,232,0.6)' }}>Apni photo upload karo</p>
-                  <p style={{ fontSize: '0.7rem', color: 'rgba(245,240,232,0.3)' }}>JPG, PNG, WebP · max 2MB</p>
+                  <p style={{ fontSize: '0.875rem', fontWeight: 700, color:'var(--text-dim)' }}>Apni photo upload karo</p>
+                  <p style={{ fontSize: '0.7rem', color:'var(--text-ghost)' }}>JPG, PNG, WebP · max 2MB</p>
                 </div>
               )}
             </button>
@@ -233,7 +233,7 @@ export default function ProfileModal({ open, onClose }: { open: boolean; onClose
           <div className="space-y-3">
             <div className="rounded-2xl p-4" style={{ background: 'rgba(245,166,35,0.08)', border: '2px solid rgba(245,166,35,0.3)' }}>
               <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f5a623', marginBottom: '0.5rem' }}>✨ Describe your vibe</p>
-              <p style={{ fontSize: '0.65rem', color: 'rgba(245,240,232,0.5)', marginBottom: '0.75rem' }}>
+              <p style={{ fontSize: '0.65rem', color:'var(--text-dim)', marginBottom: '0.75rem' }}>
                 e.g. "cool desi guy who pays for everyone", "finance minister vibes", "pizza lover"
               </p>
               <div className="flex gap-2">
@@ -251,24 +251,24 @@ export default function ProfileModal({ open, onClose }: { open: boolean; onClose
               <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                 className="flex flex-col items-center gap-2 py-4">
                 <img src={avatar} alt="ai avatar" className="h-28 w-28 rounded-full border-4 object-cover"
-                  style={{ borderColor: '#f5a623', background: '#1a1612' }} />
+                  style={{ borderColor: '#f5a623', background:'var(--card)' }} />
                 <p style={{ fontSize: '0.75rem', color: '#f5a623', fontWeight: 700 }}>Generated! ✨</p>
                 <button type="button" onClick={generateAiAvatar} className="text-xs underline"
-                  style={{ color: 'rgba(245,240,232,0.4)' }}>Generate another</button>
+                  style={{ color:'var(--text-faint)' }}>Generate another</button>
               </motion.div>
             )}
 
             {!avatar && !aiLoading && (
               <div className="py-8 text-center">
                 <p className="text-4xl mb-2">🎨</p>
-                <p style={{ fontSize: '0.875rem', color: 'rgba(245,240,232,0.4)' }}>Describe karo, generate ho jayega</p>
+                <p style={{ fontSize: '0.875rem', color:'var(--text-faint)' }}>Describe karo, generate ho jayega</p>
               </div>
             )}
           </div>
         )}
 
         {/* PROFILE FIELDS */}
-        <div style={{ borderTop: '2px solid rgba(245,240,232,0.08)', paddingTop: '1rem' }} className="space-y-3">
+        <div style={{ borderTop: '2px solid var(--border-ghost)', paddingTop: '1rem' }} className="space-y-3">
           <Input label="Naam" value={name} onChange={(e) => setName(e.target.value)} required />
           <Input label="Bio" value={bio} placeholder="Squad ka finance minister 📊" maxLength={160}
             onChange={(e) => setBio(e.target.value)} />

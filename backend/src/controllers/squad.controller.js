@@ -3,6 +3,7 @@ import { query, pool } from '../config/db.js';
 import { ApiError } from '../middleware/errorHandler.js';
 import { getBalances, simplifyDebts } from '../services/balance.service.js';
 import { awardXp, XP } from '../services/xp.service.js';
+import { createNotificationForSquad, createNotification } from './notification.controller.js';
 
 const inviteCode = () => crypto.randomBytes(4).toString('hex').toUpperCase(); // e.g. 9F3A1C2B
 
@@ -40,6 +41,14 @@ export async function joinSquad(req, res, next) {
     );
     await awardXp(rows[0].id, req.user.id, 'member.joined', XP.MEMBER_JOINED, {});
     res.json({ success: true, squad: rows[0] });
+
+    createNotificationForSquad({
+      squadId: rows[0].id,
+      excludeUserId: req.user.id,
+      type: 'member_joined',
+      message: `${req.user.name} squad mein aaya — ${rows[0].name} 👋`,
+      metadata: { squadId: rows[0].id }
+    }).catch(()=>{});
   } catch (err) { next(err); }
 }
 

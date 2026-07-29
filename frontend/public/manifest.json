@@ -1,13 +1,55 @@
 {
   "name": "SquadPay — Track Expenses, Save Friendships",
   "short_name": "SquadPay",
-  "description": "Squad ka official finance department. Bill split karo, friendship nahi.",
+  "description": "Squad ka official finance department. Bill split karo, friendship nahi. Works offline, cross-platform.",
   "start_url": "/app",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
   "orientation": "portrait",
   "background_color": "#0e0c0a",
   "theme_color": "#f5a623",
+  "categories": ["finance", "social", "utilities"],
+  "lang": "en-IN",
+  "dir": "ltr",
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
+  "handle_links": "preferred",
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "shortcuts": [
+    {
+      "name": "My Squads",
+      "short_name": "Squads",
+      "description": "View your squads",
+      "url": "/app",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Add Expense",
+      "short_name": "Kharcha",
+      "description": "Quick add expense",
+      "url": "/app?add=expense",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "SquadPay Dashboard"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "label": "SquadPay Mobile"
+    }
+  ],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -26,6 +68,28 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     }
-  ]
+  ],
+  "shortcuts_icons": [],
+  "protocol_handlers": [
+    {
+      "protocol": "web+squadpay",
+      "url": "/app?invite=%s"
+    }
+  ],
+  "share_target": {
+    "action": "/app",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
 }

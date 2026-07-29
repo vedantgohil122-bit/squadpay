@@ -113,6 +113,30 @@ async function runMigrations() {
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_personal_expenses_user ON personal_expenses(user_id, expense_date DESC)`);
   await pool.query(`CREATE TABLE IF NOT EXISTS personal_budget (user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, monthly_limit BIGINT, savings_goal BIGINT, savings_saved BIGINT NOT NULL DEFAULT 0, updated_at TIMESTAMPTZ NOT NULL DEFAULT now())`);
   console.log('   • Personal Finance tables ready 💰');
+
+  // v6.0: Notifications + Push + metadata upgrades
+  await pool.query(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications (user_id, created_at DESC)`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    endpoint TEXT UNIQUE NOT NULL,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    expiration TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`);
+  console.log('   • Notifications + Push subscriptions ready 🔔');
+
+  // v6.1: Ensure preferences table for theme etc (optional future)
+  await pool.query(`CREATE TABLE IF NOT EXISTS user_preferences (
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    theme TEXT DEFAULT 'dark' CHECK (theme IN ('dark','light','system')),
+    notifications_enabled BOOLEAN DEFAULT TRUE,
+    offline_mode BOOLEAN DEFAULT TRUE,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`);
+  console.log('   • User preferences ready 🎨');
 }
 
 async function main() {
