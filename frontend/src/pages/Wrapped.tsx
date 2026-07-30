@@ -26,30 +26,17 @@ const G = ['from-violet-700 via-fuchsia-700 to-pink-600','from-cyan-600 via-blue
   'from-emerald-600 via-teal-600 to-cyan-600','from-amber-600 via-orange-700 to-rose-700',
   'from-pink-600 via-rose-600 to-red-600','from-indigo-700 via-violet-700 to-purple-700'];
 
-// AI caption generation via Anthropic API
-async function generateCaption(photo: Photo, squadName: string, totalSpend: number): Promise<string> {
+// AI caption generation — proxied through our own backend (see
+// stats.controller.js: generateWrappedCaption), which holds the Anthropic
+// key server-side. v5.9 called api.anthropic.com directly from the browser
+// with no key at all, so this always silently failed before.
+async function generateCaption(squadId: string, photo: Photo, squadName: string, totalSpend: number): Promise<string> {
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const d = await api<{ caption: string }>(`/stats/${squadId}/wrapped/caption`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: `You are SquadPay's fun Hinglish AI. Generate a short, funny, meme-style caption (max 12 words) for a squad memory photo. Be savage but friendly.
-
-Squad: ${squadName} | Total spent together: ₹${Math.round(totalSpend/100).toLocaleString('en-IN')}
-Photo uploaded by: ${photo.uploaderName}
-Original caption: "${photo.caption || 'no caption'}"
-
-Rules: Hinglish (mix Hindi + English), Gen-Z humor, reference the squad spending/debt if funny, max 12 words, one emoji max.
-Reply with ONLY the caption, nothing else.`,
-        }],
-      }),
+      body: JSON.stringify({ caption: photo.caption, uploaderName: photo.uploaderName, squadName, totalSpend }),
     });
-    const d = await res.json();
-    return d.content?.[0]?.text?.trim() || photo.caption || 'Yaadein priceless, expenses very much priced 💀';
+    return d.caption || photo.caption || 'Yaadein priceless, expenses very much priced 💀';
   } catch {
     return photo.caption || 'Yaadein priceless, expenses very much priced 💀';
   }
@@ -73,7 +60,7 @@ export default function Wrapped() {
         for (let i = 0; i < photos.length; i += 5) {
           const batch = photos.slice(i, i + 5);
           await Promise.all(batch.map(async (p) => {
-            caps[p.id] = await generateCaption(p, d.wrapped.squadName, d.wrapped.totalSpend);
+            caps[p.id] = await generateCaption(id!, p, d.wrapped.squadName, d.wrapped.totalSpend);
           }));
           setAiCaptions({ ...caps }); // update progressively
         }

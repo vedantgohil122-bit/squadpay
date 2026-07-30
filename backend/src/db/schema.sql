@@ -1,14 +1,30 @@
 -- ============================================================
--- SQUADPAY DATABASE SCHEMA  (PostgreSQL)
+-- SQUADPAY DATABASE SCHEMA  (PostgreSQL)  —  v6.0
 -- ============================================================
 -- GOLDEN RULE: all money is stored in PAISE (integers).
 -- ₹18.50 is stored as 1850. Floating point math loses paise
 -- and a finance engine that loses paise is a broken engine.
 -- Convert to rupees only when DISPLAYING, never when storing.
+--
+-- v6.0 note: this file used to have several tables defined
+-- TWICE (trips, treasury, contributions, treasury_transactions)
+-- with different columns each time. Because the *first* CREATE
+-- TABLE always won on a brand-new database, the *second*
+-- definition's extra columns (trips.budget, trips.status) were
+-- silently never created — a fresh install would build a Trip
+-- Mode that immediately 500'd. personal_expenses/personal_budget
+-- were missing from this file entirely (they only existed in
+-- scripts/setup-db.js's migration path), so a fresh install
+-- broke Personal Finance too. This version is deduplicated and
+-- matches what setup-db.js's migrations produce on an existing
+-- database — fresh installs and upgraded installs now end up
+-- with an identical schema.
 -- ============================================================
 
 -- Run this file once:  psql -d squadpay -f schema.sql
 -- (or paste into Supabase SQL editor)
+-- Existing databases: don't re-run this — use `npm run setup-db`
+-- (scripts/setup-db.js), which migrates in place instead.
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto"; -- for gen_random_uuid()
 
@@ -80,45 +96,52 @@ INSERT INTO levels (level, title, xp_required) VALUES
 
 -- ------------------------------------------------------------
 -- 5. TRIPS — Goa Trip, Movie Night, etc. Expenses can
--- optionally belong to a trip.
+-- optionally belong to a trip. (Unified — this used to be two
+-- conflicting CREATE TABLE statements; see v6.0 note above.)
 -- ------------------------------------------------------------
 CREATE TABLE trips (
-  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  squad_id   UUID NOT NULL REFERENCES squads(id) ON DELETE CASCADE,
-  name       TEXT NOT NULL,
-  emoji      TEXT NOT NULL DEFAULT '🧳',
-  cover_url  TEXT,
-  notes      TEXT DEFAULT '',
-  start_date DATE,
-  end_date   DATE,
-  created_by UUID NOT NULL REFERENCES users(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  squad_id    UUID NOT NULL REFERENCES squads(id) ON DELETE CASCADE,
+  name        TEXT NOT NULL,
+  emoji       TEXT NOT NULL DEFAULT '🧳',
+  cover_url   TEXT,
+  notes       TEXT DEFAULT '',
+  start_date  DATE,
+  end_date    DATE,
+  budget      BIGINT,                    -- optional, PAISE
+  status      TEXT NOT NULL DEFAULT 'active'
+              CHECK (status IN ('active','completed','archived')),
+  created_by  UUID NOT NULL REFERENCES users(id),
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- ------------------------------------------------------------
 -- 6. EXPENSES — the heart of the app.
 -- soft delete (is_deleted) so balances can be recalculated
--- and history/audit is never lost.
+-- and history/audit is never lost. treasury_amount tracks how
+-- much of this expense was paid straight out of squad treasury
+-- (see #16), so it can be refunded if the expense is deleted.
 -- ------------------------------------------------------------
 CREATE TABLE expenses (
-  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  squad_id     UUID NOT NULL REFERENCES squads(id) ON DELETE CASCADE,
-  trip_id      UUID REFERENCES trips(id) ON DELETE SET NULL,
-  title        TEXT NOT NULL,
-  amount       BIGINT NOT NULL CHECK (amount > 0),   -- PAISE
-  category     TEXT NOT NULL DEFAULT 'other'
-               CHECK (category IN ('food','travel','movies','fuel',
-                      'events','shopping','stay','other')),
-  notes        TEXT DEFAULT '',
-  receipt_url  TEXT,
-  paid_by      UUID NOT NULL REFERENCES users(id),
-  split_type   TEXT NOT NULL DEFAULT 'equal'
-               CHECK (split_type IN ('equal','percentage','custom','shares')),
-  expense_date DATE NOT NULL DEFAULT CURRENT_DATE,
-  is_deleted   BOOLEAN NOT NULL DEFAULT FALSE,
-  created_by   UUID NOT NULL REFERENCES users(id),
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  squad_id        UUID NOT NULL REFERENCES squads(id) ON DELETE CASCADE,
+  trip_id         UUID REFERENCES trips(id) ON DELETE SET NULL,
+  title           TEXT NOT NULL,
+  amount          BIGINT NOT NULL CHECK (amount > 0),   -- PAISE
+  category        TEXT NOT NULL DEFAULT 'other'
+                  CHECK (category IN ('food','travel','movies','fuel',
+                         'events','shopping','stay','other')),
+  notes           TEXT DEFAULT '',
+  receipt_url     TEXT,
+  paid_by         UUID NOT NULL REFERENCES users(id),
+  split_type      TEXT NOT NULL DEFAULT 'equal'
+                  CHECK (split_type IN ('equal','percentage','custom','shares')),
+  expense_date    DATE NOT NULL DEFAULT CURRENT_DATE,
+  is_deleted      BOOLEAN NOT NULL DEFAULT FALSE,
+  treasury_amount BIGINT NOT NULL DEFAULT 0,             -- PAISE paid from treasury
+  created_by      UUID NOT NULL REFERENCES users(id),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- ------------------------------------------------------------
@@ -245,23 +268,9 @@ CREATE TABLE activity_log (
 );
 
 -- ------------------------------------------------------------
--- INDEXES — the queries we will run thousands of times
--- ------------------------------------------------------------
-CREATE INDEX idx_members_squad        ON squad_members (squad_id) WHERE status = 'active';
-CREATE INDEX idx_members_user         ON squad_members (user_id);
-CREATE INDEX idx_expenses_squad       ON expenses (squad_id) WHERE is_deleted = FALSE;
-CREATE INDEX idx_expenses_trip        ON expenses (trip_id)  WHERE is_deleted = FALSE;
-CREATE INDEX idx_participants_expense ON expense_participants (expense_id);
-CREATE INDEX idx_participants_user    ON expense_participants (user_id);
-CREATE INDEX idx_settlements_squad    ON settlements (squad_id) WHERE status = 'completed';
-CREATE INDEX idx_notifications_unread ON notifications (user_id) WHERE is_read = FALSE;
-CREATE INDEX idx_activity_squad_time  ON activity_log (squad_id, created_at DESC);
-CREATE INDEX idx_photos_squad         ON photos (squad_id, created_at DESC);
-
--- ------------------------------------------------------------
 -- 15. REACTIONS — emoji reactions on memory photos
 -- ------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS reactions (
+CREATE TABLE reactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   photo_id UUID NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
@@ -273,7 +282,7 @@ CREATE TABLE IF NOT EXISTS reactions (
 -- ------------------------------------------------------------
 -- 16. TREASURY — one row per squad, running balance in paise
 -- ------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS treasury (
+CREATE TABLE treasury (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   squad_id   UUID NOT NULL UNIQUE REFERENCES squads(id) ON DELETE CASCADE,
   balance    BIGINT NOT NULL DEFAULT 0 CHECK (balance >= 0),
@@ -284,7 +293,7 @@ CREATE TABLE IF NOT EXISTS treasury (
 -- ------------------------------------------------------------
 -- 17. CONTRIBUTIONS — member puts money INTO the treasury
 -- ------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS contributions (
+CREATE TABLE contributions (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   squad_id   UUID NOT NULL REFERENCES squads(id) ON DELETE CASCADE,
   user_id    UUID NOT NULL REFERENCES users(id),
@@ -295,53 +304,14 @@ CREATE TABLE IF NOT EXISTS contributions (
 
 -- ------------------------------------------------------------
 -- 18. TREASURY_TRANSACTIONS — every debit/credit on the treasury
--- type: 'deposit' | 'expense' | 'refund' | 'reversal'
+-- type: 'deposit' (member contributes) | 'expense' (spent on an
+-- expense) | 'refund' | 'reversal' (an expense that spent from
+-- treasury was deleted, so the amount is credited back — v6.0)
 -- ------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS treasury_transactions (
-  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  squad_id   UUID NOT NULL REFERENCES squads(id) ON DELETE CASCADE,
-  type       TEXT NOT NULL CHECK (type IN ('deposit','expense','refund','reversal')),
-  amount     BIGINT NOT NULL CHECK (amount > 0),
-  description TEXT NOT NULL DEFAULT '',
-  expense_id  UUID REFERENCES expenses(id) ON DELETE SET NULL,
-  user_id     UUID REFERENCES users(id),
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE INDEX IF NOT EXISTS idx_contributions_squad   ON contributions (squad_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_treasury_txns_squad   ON treasury_transactions (squad_id, created_at DESC);
-
--- ------------------------------------------------------------
--- 16. TREASURY — one per squad, balance in paise
--- ------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS treasury (
-  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  squad_id   UUID NOT NULL UNIQUE REFERENCES squads(id) ON DELETE CASCADE,
-  balance    BIGINT NOT NULL DEFAULT 0,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- ------------------------------------------------------------
--- 17. CONTRIBUTIONS — member deposits money into treasury
--- ------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS contributions (
-  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  squad_id   UUID NOT NULL REFERENCES squads(id) ON DELETE CASCADE,
-  user_id    UUID NOT NULL REFERENCES users(id),
-  amount     BIGINT NOT NULL CHECK (amount > 0),
-  note       TEXT DEFAULT '',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- ------------------------------------------------------------
--- 18. TREASURY_TRANSACTIONS — audit log of every treasury move
--- type: 'deposit' | 'expense' | 'reversal'
--- ------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS treasury_transactions (
+CREATE TABLE treasury_transactions (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   squad_id    UUID NOT NULL REFERENCES squads(id) ON DELETE CASCADE,
-  type        TEXT NOT NULL CHECK (type IN ('deposit','expense','reversal')),
+  type        TEXT NOT NULL CHECK (type IN ('deposit','expense','refund','reversal')),
   amount      BIGINT NOT NULL CHECK (amount > 0),
   description TEXT NOT NULL DEFAULT '',
   expense_id  UUID REFERENCES expenses(id) ON DELETE SET NULL,
@@ -349,40 +319,11 @@ CREATE TABLE IF NOT EXISTS treasury_transactions (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- new column on expenses: treasury_amount (paise paid from treasury)
-ALTER TABLE expenses ADD COLUMN IF NOT EXISTS treasury_amount BIGINT NOT NULL DEFAULT 0;
-
-CREATE INDEX IF NOT EXISTS idx_contributions_squad ON contributions (squad_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_treasury_txns_squad ON treasury_transactions (squad_id, created_at DESC);
-
--- ------------------------------------------------------------
--- 19. TRIPS — group expenses under a named event/trip
--- ------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS trips (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  squad_id    UUID NOT NULL REFERENCES squads(id) ON DELETE CASCADE,
-  name        TEXT NOT NULL,
-  emoji       TEXT NOT NULL DEFAULT '🧳',
-  start_date  DATE,
-  end_date    DATE,
-  budget      BIGINT, -- optional, paise
-  status      TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','completed','archived')),
-  created_by  UUID NOT NULL REFERENCES users(id),
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-ALTER TABLE expenses ADD COLUMN IF NOT EXISTS trip_id UUID REFERENCES trips(id) ON DELETE SET NULL;
-ALTER TABLE photos   ADD COLUMN IF NOT EXISTS trip_id UUID REFERENCES trips(id) ON DELETE SET NULL;
-
-CREATE INDEX IF NOT EXISTS idx_trips_squad   ON trips (squad_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_expenses_trip ON expenses (trip_id);
-CREATE INDEX IF NOT EXISTS idx_photos_trip   ON photos (trip_id);
-
 -- ------------------------------------------------------------
 -- 19. OTP_CODES — email verification for login/register, password reset
 -- purpose: 'login' | 'register' | 'reset_password'
 -- ------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS otp_codes (
+CREATE TABLE otp_codes (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email       TEXT NOT NULL,
   code_hash   TEXT NOT NULL,           -- bcrypt hash of the 6-digit code, never store plaintext
@@ -393,7 +334,53 @@ CREATE TABLE IF NOT EXISTS otp_codes (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- ------------------------------------------------------------
+-- 20. PERSONAL_EXPENSES — a user's own expenses, outside any
+-- squad. v6.0: this table (and #21) previously existed only in
+-- scripts/setup-db.js's migrations, never in this file, so a
+-- brand-new database was missing them entirely.
+-- ------------------------------------------------------------
+CREATE TABLE personal_expenses (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title        TEXT NOT NULL,
+  amount       BIGINT NOT NULL,        -- PAISE
+  category     TEXT NOT NULL DEFAULT 'other',
+  note         TEXT,
+  expense_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ------------------------------------------------------------
+-- 21. PERSONAL_BUDGET — one row per user: monthly limit + savings goal
+-- ------------------------------------------------------------
+CREATE TABLE personal_budget (
+  user_id       UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  monthly_limit BIGINT,                -- PAISE
+  savings_goal  BIGINT,                -- PAISE
+  savings_saved BIGINT NOT NULL DEFAULT 0,
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ------------------------------------------------------------
+-- INDEXES — the queries we will run thousands of times
+-- ------------------------------------------------------------
+CREATE INDEX idx_members_squad          ON squad_members (squad_id) WHERE status = 'active';
+CREATE INDEX idx_members_user           ON squad_members (user_id);
+CREATE INDEX idx_expenses_squad         ON expenses (squad_id) WHERE is_deleted = FALSE;
+CREATE INDEX idx_expenses_trip          ON expenses (trip_id)  WHERE is_deleted = FALSE;
+CREATE INDEX idx_participants_expense   ON expense_participants (expense_id);
+CREATE INDEX idx_participants_user      ON expense_participants (user_id);
+CREATE INDEX idx_settlements_squad      ON settlements (squad_id) WHERE status = 'completed';
+CREATE INDEX idx_notifications_unread   ON notifications (user_id) WHERE is_read = FALSE;
+CREATE INDEX idx_activity_squad_time    ON activity_log (squad_id, created_at DESC);
+CREATE INDEX idx_photos_squad           ON photos (squad_id, created_at DESC);
+CREATE INDEX idx_photos_trip            ON photos (trip_id);
+CREATE INDEX idx_trips_squad            ON trips (squad_id, created_at DESC);
+CREATE INDEX idx_contributions_squad    ON contributions (squad_id, created_at DESC);
+CREATE INDEX idx_treasury_txns_squad    ON treasury_transactions (squad_id, created_at DESC);
+CREATE INDEX idx_personal_expenses_user ON personal_expenses (user_id, expense_date DESC);
 -- Partial index matching the exact shape of the verify-OTP query: it always
 -- filters WHERE consumed_at IS NULL, so a partial index on just the unconsumed
 -- rows is both smaller and a more precise match than indexing everything.
-CREATE INDEX IF NOT EXISTS idx_otp_lookup ON otp_codes (email, purpose, created_at DESC) WHERE consumed_at IS NULL;
+CREATE INDEX idx_otp_lookup ON otp_codes (email, purpose, created_at DESC) WHERE consumed_at IS NULL;

@@ -104,11 +104,7 @@ export async function memberProfile(req, res, next) {
     );
 
     if (!callerCheck.rows.length) {
-      return res.status(403).json({
-        success: false,
-        error: 'Not a member of this squad',
-        debug: { squadId, callerId, userId }
-      });
+      return res.status(403).json({ success: false, error: 'Not a member of this squad' });
     }
 
     // Step 2: get the target member's full profile
@@ -194,7 +190,7 @@ export async function memberProfile(req, res, next) {
 // Admin sets/updates member's UPI ID (only admin can set; all can view)
 export async function setMemberUpi(req, res, next) {
   try {
-    const { squadId, userId } = req.params;
+    const { id: squadId, userId } = req.params;
     const { upiId } = req.body || {};
     // only the squad admin OR the user themselves can set it
     const me = (await query(`SELECT role FROM squad_members WHERE squad_id=$1 AND user_id=$2 AND status='active'`,[squadId, req.user.id])).rows[0];

@@ -50,10 +50,9 @@ export default function MemberSheet({ open, onClose, squadId, userId, currentUse
   useEffect(() => {
     if (open && userId) {
       setMember(null); setLoading(true); setShowQr(false); setErr('');
-      console.log('[MemberSheet] fetching', `/squads/${squadId}/member/${userId}`);
       api<{ member: MemberDetail }>(`/squads/${squadId}/member/${userId}`)
-        .then((d) => { console.log('[MemberSheet] got', d.member?.name); setMember(d.member); })
-        .catch((e) => { console.error('[MemberSheet] error:', e); setErr(e.message || 'Load nahi hua'); })
+        .then((d) => setMember(d.member))
+        .catch((e) => setErr(e.message || 'Load nahi hua'))
         .finally(() => setLoading(false));
     }
   }, [open, userId, squadId]);

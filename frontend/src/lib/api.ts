@@ -22,3 +22,20 @@ export async function api<T = any>(path: string, options: RequestInit = {}): Pro
   if (!res.ok) throw new ApiException(res.status, data.error || 'Something went wrong');
   return data as T;
 }
+
+// Multipart upload wrapper — same BASE-resolution + auth + error-unwrapping as
+// api(), but for FormData (avatars, memory photos). v5.9 had these upload
+// calls using bare relative fetch('/api/...') paths, which only worked on
+// localhost — in production (Vercel frontend + Render backend on different
+// origins) that silently 404'd. Route every upload through here instead.
+export async function apiUpload<T = any>(path: string, formData: FormData): Promise<T> {
+  const token = localStorage.getItem('squadpay_token');
+  const res = await fetch(`${BASE}${path}`, {
+    method: 'POST',
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: formData,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new ApiException(res.status, data.error || 'Upload failed');
+  return data as T;
+}

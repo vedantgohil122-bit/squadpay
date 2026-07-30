@@ -5,7 +5,7 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, Send, Trash2, MessageCircle, Heart } from 'lucide-react';
-import { api } from '../lib/api';
+import { api, apiUpload } from '../lib/api';
 import { timeAgo } from '../lib/money';
 import { useAuth } from '../store/auth';
 import { Button, Avatar, FunLoader, ErrorText } from './ui';
@@ -44,12 +44,9 @@ export default function Memories({ squadId, isAdmin }: { squadId: string; isAdmi
     if (!file) { setError('Photo toh select karo bhai 📸'); play('error'); return; }
     initSound(); setBusy(true); setError('');
     try {
-      const token = localStorage.getItem('squadpay_token');
       const fd = new FormData();
       fd.append('squadId', squadId); fd.append('caption', caption); fd.append('photo', file);
-      const res = await fetch('/api/memories', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.error || 'Upload fail ho gaya');
+      await apiUpload('/memories', fd);
       play('success');
       setCaption(''); pickFile(null); if (fileRef.current) fileRef.current.value = '';
       load();

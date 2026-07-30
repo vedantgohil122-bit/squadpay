@@ -4,6 +4,42 @@
 
 Social expense-tracking web app for friend squads — React + TypeScript + Tailwind v4 + Framer Motion frontend, Node/Express backend, PostgreSQL database.
 
+## 🩹 v6.0 — bug fix pass
+
+Full code review turned up a handful of real bugs, several of them breaking
+things silently in production. All fixed:
+
+- **Avatar & memory-photo uploads were broken in production.** Both called a
+  bare relative `fetch('/api/...')` instead of going through the app's API
+  client, so on Vercel (frontend) they hit the wrong origin instead of the
+  Render backend. Fixed via a new `apiUpload()` helper in `lib/api.ts` that
+  every upload now uses.
+- **AI captions on Squad Wrapped never worked.** The old code called
+  `api.anthropic.com` directly from the browser with no API key. Caption
+  generation now goes through a new backend endpoint
+  (`POST /api/stats/:id/wrapped/caption`) that holds the key server-side and
+  degrades gracefully if it's not configured.
+- **Personal Finance was unreachable.** The component existed and worked, but
+  was never actually rendered on the Dashboard. It's now mounted there.
+- **`setMemberUpi` always failed.** It read `req.params.squadId`, but the
+  route only provides `:id` — the squad ID was always `undefined`.
+- **Deleting a treasury-funded expense didn't refund the treasury.** The
+  balance stayed debited forever. Deletion now reverses the treasury
+  transaction atomically.
+- **`schema.sql` had duplicate, conflicting table definitions** (trips,
+  treasury, contributions, treasury_transactions each appeared twice) and was
+  missing `personal_expenses`/`personal_budget` entirely — a brand-new
+  database built from this file alone would have a broken Trip Mode
+  (no `budget`/`status` columns) and no Personal Finance tables at all.
+  Rewritten as one clean, deduplicated schema matching what the migration
+  script (`setup-db.js`) actually produces.
+- Minor cleanup: removed a leftover debug `console.log` in `MemberSheet`, a
+  debug field leaking squad/user IDs in a 403 response, a redundant reaction
+  upsert doing 2-3 queries where one does the job, dead variables in the
+  stats controller, a duplicated prop in `FunTab`, and relabeled the avatar
+  "AI Generate" tab (it's prompt-seeded DiceBear variation, not real AI) so
+  it doesn't overpromise.
+
 ## ✅ Current status
 
 ### ZIP 1 (this zip) — COMPLETE WORKING CORE ✅

@@ -113,17 +113,33 @@ export async function listExpenses(req, res, next) {
 }
 
 export async function deleteExpense(req, res, next) {
+  const client = await pool.connect();
   try {
     const { id } = req.params;
-    const exp = (await query(`SELECT * FROM expenses WHERE id=$1 AND is_deleted=FALSE`, [id])).rows[0];
+    const exp = (await client.query(`SELECT * FROM expenses WHERE id=$1 AND is_deleted=FALSE`, [id])).rows[0];
     if (!exp) throw new ApiError(404, 'Expense not found');
-    const me = (await query(
+    const me = (await client.query(
       `SELECT role FROM squad_members WHERE squad_id=$1 AND user_id=$2 AND status='active'`,
       [exp.squad_id, req.user.id])).rows[0];
     if (!me) throw new ApiError(403, 'Not a member of this squad');
     if (me.role !== 'admin' && exp.created_by !== req.user.id)
       throw new ApiError(403, 'Only admins or the creator can delete this expense');
-    await query(`UPDATE expenses SET is_deleted=TRUE, updated_at=now() WHERE id=$1`, [id]);
+
+    await client.query('BEGIN');
+    await client.query(`UPDATE expenses SET is_deleted=TRUE, updated_at=now() WHERE id=$1`, [id]);
+
+    // Refund the treasury if this expense had spent from it — otherwise the
+    // balance stays debited forever with nothing to show for it.
+    const treasuryAmt = Number(exp.treasury_amount || 0);
+    if (treasuryAmt > 0) {
+      await client.query(`UPDATE treasury SET balance=balance+$1, updated_at=now() WHERE squad_id=$2`, [treasuryAmt, exp.squad_id]);
+      await client.query(
+        `INSERT INTO treasury_transactions (squad_id,type,amount,description,expense_id,user_id) VALUES ($1,'reversal',$2,$3,$4,$5)`,
+        [exp.squad_id, treasuryAmt, `"${exp.title}" delete hone se treasury ko ₹${(treasuryAmt/100).toFixed(0)} wapas mila 🔄`, exp.id, req.user.id]
+      );
+    }
+    await client.query('COMMIT');
     res.json({ success: true });
-  } catch (err) { next(err); }
+  } catch (err) { await client.query('ROLLBACK'); next(err); }
+  finally { client.release(); }
 }

@@ -1,7 +1,7 @@
 import { FormEvent, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Camera, Shuffle, Sparkles, Upload, Check } from 'lucide-react';
-import { api } from '../lib/api';
+import { api, apiUpload } from '../lib/api';
 import { useAuth, User } from '../store/auth';
 import { Modal, Input, ErrorText } from './ui';
 import { play, initSound } from '../lib/sound';
@@ -87,16 +87,9 @@ export default function ProfileModal({ open, onClose }: { open: boolean; onClose
 
       // If there's a file to upload, upload it first
       if (uploadFile && tab === 'upload') {
-        const token = localStorage.getItem('squadpay_token');
         const fd = new FormData();
         fd.append('avatar', uploadFile);
-        const res = await fetch('/api/auth/avatar', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-          body: fd,
-        });
-        const d = await res.json();
-        if (!res.ok) throw new Error(d.error || 'Upload failed');
+        const d = await apiUpload<{ avatarUrl: string }>('/auth/avatar', fd);
         finalAvatar = d.avatarUrl;
       }
 
@@ -120,7 +113,7 @@ export default function ProfileModal({ open, onClose }: { open: boolean; onClose
   const TABS: { id: Tab; label: string; icon: typeof Camera }[] = [
     { id: 'styles', label: 'Pick Style', icon: Shuffle },
     { id: 'upload', label: 'Upload Photo', icon: Upload },
-    { id: 'ai',     label: 'AI Generate', icon: Sparkles },
+    { id: 'ai',     label: 'Vibe Generate', icon: Sparkles },
   ];
 
   return (
@@ -228,7 +221,7 @@ export default function ProfileModal({ open, onClose }: { open: boolean; onClose
           </div>
         )}
 
-        {/* AI GENERATE TAB */}
+        {/* VIBE GENERATE TAB — prompt-seeded avatar variation, not a real AI image model */}
         {tab === 'ai' && (
           <div className="space-y-3">
             <div className="rounded-2xl p-4" style={{ background: 'rgba(245,166,35,0.08)', border: '2px solid rgba(245,166,35,0.3)' }}>

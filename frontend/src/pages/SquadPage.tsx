@@ -211,7 +211,7 @@ export default function SquadPage() {
             )}
             {tab==='members'   && <MemberList members={members} balances={balances} onMemberClick={setProfileUserId} />}
             {tab==='memories'  && <Memories squadId={squad.id} isAdmin={isAdmin} />}
-            {tab==='fun'       && <FunTab squadId={squad.id} squadId2={id!} expenses={expenses} />}
+            {tab==='fun'       && <FunTab squadId={squad.id} expenses={expenses} />}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -577,7 +577,7 @@ function MemberList({ members, balances, onMemberClick }: { members:Member[]; ba
 interface Board { title:string; emoji:string; subtitle?:string; entries:{name:string;value:string}[] }
 interface Meme { emoji:string; top:string; bottom:string }
 
-function FunTab({ squadId, squadId2, expenses }: { squadId:string; squadId2:string; expenses: any[] }) {
+function FunTab({ squadId, expenses }: { squadId:string; expenses: any[] }) {
   const nav = useNavigate();
   const [period, setPeriod] = useState<'week'|'all'>('week');
   const [boards, setBoards] = useState<Board[]|null>(null);
@@ -624,7 +624,7 @@ function FunTab({ squadId, squadId2, expenses }: { squadId:string; squadId2:stri
           <h3 className="font-display font-extrabold" style={{ color:'#f5f0e8' }}>📊 Squad Wrapped</h3>
           <p className="text-xs" style={{ color:'rgba(14,12,10,0.7)' }}>Pura financial damage report, Spotify style.</p>
         </div>
-        <button onClick={() => nav(`/app/squad/${squadId2}/wrapped`)} className="bbtn gap-2"><Play className="h-4 w-4"/>Play Wrapped</button>
+        <button onClick={() => nav(`/app/squad/${squadId}/wrapped`)} className="bbtn gap-2"><Play className="h-4 w-4"/>Play Wrapped</button>
       </div>
 
       <section>

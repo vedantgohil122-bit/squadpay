@@ -81,8 +81,6 @@ export async function leaderboards(req, res, next) {
     await assertMember(id, req.user.id);
     const s = await computeStats(id, period);
 
-    const foodKing = s.catKings.find((c) => c.category === 'food');
-    const chai = s.catKings.find((c) => ['food'].includes(c.category)); // chai lives in food
     const boards = [
       { title: 'Walking ATM', emoji: '💸', subtitle: 'biggest spender',
         entries: s.spenders.slice(0, 5).map((x) => ({ name: firstName(x.name), value: fmt(Number(x.paid)) })) },
@@ -176,6 +174,48 @@ export async function roast(req, res, next) {
 
     res.json({ success: true, memes });
   } catch (err) { next(err); }
+}
+
+// ---------------- WRAPPED PHOTO CAPTION (AI) ----------------
+// v5.9 called api.anthropic.com directly from the browser with no key —
+// always failed silently. This does the same call server-side, using an
+// env-provided key, and falls back to the original caption on any failure
+// (missing key, network error, bad response) so the UI never breaks.
+export async function generateWrappedCaption(req, res, next) {
+  try {
+    const { id } = req.params;
+    await assertMember(id, req.user.id);
+    const { caption, uploaderName, squadName, totalSpend } = req.body || {};
+
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      return res.json({ success: true, caption: caption || 'Yaadein priceless, expenses very much priced 💀' });
+    }
+
+    const prompt = `You are SquadPay's fun Hinglish AI. Generate a short, funny, meme-style caption (max 12 words) for a squad memory photo. Be savage but friendly.
+
+Squad: ${squadName} | Total spent together: ₹${Math.round((totalSpend || 0) / 100).toLocaleString('en-IN')}
+Photo uploaded by: ${uploaderName}
+Original caption: "${caption || 'no caption'}"
+
+Rules: Hinglish (mix Hindi + English), Gen-Z humor, reference the squad spending/debt if funny, max 12 words, one emoji max.
+Reply with ONLY the caption, nothing else.`;
+
+    const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 60, messages: [{ role: 'user', content: prompt }] }),
+    });
+
+    if (!aiRes.ok) return res.json({ success: true, caption: caption || 'Yaadein priceless, expenses very much priced 💀' });
+
+    const d = await aiRes.json();
+    const text = d.content?.[0]?.text?.trim();
+    res.json({ success: true, caption: text || caption || 'Yaadein priceless, expenses very much priced 💀' });
+  } catch (err) {
+    // Never let a broken AI call break Wrapped — fall back quietly.
+    res.json({ success: true, caption: req.body?.caption || 'Yaadein priceless, expenses very much priced 💀' });
+  }
 }
 
 // ---------------- SQUAD WRAPPED ----------------

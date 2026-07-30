@@ -9,7 +9,7 @@ import { pingDb } from '../config/db.js';
 const router = Router();
 
 router.get('/', (req, res) => {
-  res.json({ success: true, service: 'SquadPay API', status: 'alive 🟢' });
+  res.json({ success: true, service: 'SquadPay API', status: 'alive 🟢', version: '6.0.0' });
 });
 
 router.get('/db', async (req, res, next) => {

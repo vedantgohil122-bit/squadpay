@@ -71,6 +71,10 @@ export default function Dashboard() {
           </div>
         </div>
 
+        <div className="mb-8">
+          <PersonalFinance />
+        </div>
+
         {!squads ? <FunLoader /> : squads.length === 0 ? (
           <div className="bcard bcard-yellow p-12 text-center">
             <motion.p animate={{ y: [0, -8, 0] }} transition={{ repeat: Infinity, duration: 2.2 }} className="text-5xl">🛋️</motion.p>

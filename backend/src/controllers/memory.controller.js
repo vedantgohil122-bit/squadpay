@@ -77,17 +77,7 @@ export async function toggleReaction(req, res, next) {
       await query(`DELETE FROM reactions WHERE user_id=$1 AND photo_id=$2`, [req.user.id, req.params.id]);
       res.json({ success: true, reacted: false, emoji: null });
     } else {
-      // different or none → upsert (switch or add)
-      await query(
-        `INSERT INTO reactions (user_id, photo_id, emoji) VALUES ($1,$2,$3)
-         ON CONFLICT (user_id, photo_id, emoji) DO UPDATE SET emoji=$3
-         -- the UNIQUE is on (user_id, photo_id, emoji) so we need a different approach:`,
-        [req.user.id, req.params.id, emoji]).catch(async () => {
-          // fallback: delete existing then insert new
-          await query(`DELETE FROM reactions WHERE user_id=$1 AND photo_id=$2`, [req.user.id, req.params.id]);
-          await query(`INSERT INTO reactions (user_id, photo_id, emoji) VALUES ($1,$2,$3)`, [req.user.id, req.params.id, emoji]);
-        });
-      // clean approach: delete + insert
+      // different or none → swap: clear any existing reaction, set the new one
       await query(`DELETE FROM reactions WHERE user_id=$1 AND photo_id=$2`, [req.user.id, req.params.id]);
       await query(`INSERT INTO reactions (user_id, photo_id, emoji) VALUES ($1,$2,$3)`, [req.user.id, req.params.id, emoji]);
       res.json({ success: true, reacted: true, emoji });
