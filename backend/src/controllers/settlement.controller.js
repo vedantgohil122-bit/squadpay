@@ -1,6 +1,7 @@
 import { query } from '../config/db.js';
 import { ApiError } from '../middleware/errorHandler.js';
 import { awardXp, unlockAchievement, XP } from '../services/xp.service.js';
+import { createNotification } from './notification.controller.js';
 
 // Step 1: the PAYER says "I've paid" -> creates a PENDING settlement.
 // Balances do NOT change yet. The receiver must confirm.
@@ -29,6 +30,15 @@ export async function createSettlement(req, res, next) {
        VALUES ($1,$2,$3,$4,$5,$6,'pending') RETURNING *`,
       [squadId, req.user.id, toUser, amt, payMethod, note || '']
     );
+
+    createNotification({
+      userId: toUser,
+      squadId,
+      type: 'settlement_pending',
+      message: `${req.user.name} ne ₹${(amt / 100).toFixed(0)} bheja hai — confirm karo`,
+      metadata: { settlementId: rows[0].id, amount: amt },
+    });
+
     res.status(201).json({ success: true, settlement: rows[0] });
   } catch (err) { next(err); }
 }
@@ -46,6 +56,15 @@ export async function confirmSettlement(req, res, next) {
 
     await awardXp(s.squad_id, s.from_user, 'settlement.completed', XP.SETTLEMENT_DONE, { amount: Number(s.amount) });
     await unlockAchievement(s.squad_id, s.from_user, 'FIRST_SETTLEMENT');
+
+    createNotification({
+      userId: s.from_user,
+      squadId: s.squad_id,
+      type: 'settlement_completed',
+      message: `${req.user.name} ne tumhara ₹${(Number(s.amount) / 100).toFixed(0)} confirm kar diya ✅`,
+      metadata: { settlementId: s.id, amount: Number(s.amount) },
+    });
+
     res.json({ success: true, settlement: rows[0] });
   } catch (err) { next(err); }
 }

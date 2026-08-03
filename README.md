@@ -4,6 +4,39 @@
 
 Social expense-tracking web app for friend squads — React + TypeScript + Tailwind v4 + Framer Motion frontend, Node/Express backend, PostgreSQL database.
 
+## 🔔 v6.1 — real push notifications
+
+Notifications now work two ways:
+
+1. **In-app bell** (top of Dashboard and every squad page) — shows recent
+   activity, unread count badge, click to jump to that squad. Polls every
+   30s. Backed by the `notifications` table (already existed in the schema,
+   just never had an API on top of it before).
+2. **Real browser push** — via the Web Push protocol (VAPID). Once a user
+   taps "Allow" on the prompt, they get actual OS-level notifications —
+   phone lock screen, desktop notification center — **even with the
+   SquadPay tab/app fully closed**. This is the real thing, not a
+   simulated/local notification.
+
+**What triggers a notification:** someone adds an expense, sends or
+confirms a settlement, joins your squad, or contributes to the treasury.
+
+**Setup:** push notifications are fully optional — the in-app bell always
+works. To enable real push, generate a VAPID keypair and add it to `.env`:
+```
+node -e "console.log(require('web-push').generateVAPIDKeys())"
+```
+Copy the `publicKey`/`privateKey` into `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`
+in `backend/.env`, then run `npm run setup` to add the new
+`push_subscriptions` table. Without these two variables set, the backend
+just skips sending pushes — nothing breaks, the bell still works.
+
+**Note on the `arena` branch:** this reuses the useful parts of the
+unmerged notification work that was sitting in `arena/019fa459-squadpay`
+(the bell UI, the backend CRUD) but replaces its non-functional push stub
+— that branch's `lib/push.ts` had a literal placeholder VAPID key and no
+server-side sending — with an actual working Web Push implementation.
+
 ## 🩹 v6.0 — bug fix pass
 
 Full code review turned up a handful of real bugs, several of them breaking

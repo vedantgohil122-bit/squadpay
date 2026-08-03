@@ -13,6 +13,7 @@ import { play, initSound } from '../lib/sound';
 import Memories from '../components/Memories';
 import MemberSheet from '../components/MemberSheet';
 import AddExpenseModal from '../components/AddExpenseModal';
+import { NotificationBell } from '../components/NotificationBell';
 
 interface Member { id: string; name: string; avatar_url?: string; upi_id?: string; role: string; xp: number; level: number; level_title: string }
 interface Balance { userId: string; name: string; avatarUrl?: string; net: number; totalPaid: number; totalShare: number }
@@ -121,6 +122,7 @@ export default function SquadPage() {
           <ArrowLeft className="h-4 w-4" /> Squads
         </button>
         <div className="flex items-center gap-2">
+          <NotificationBell squadId={id} />
           <SoundToggle />
           <button onClick={() => setTab('fun')}
             className="bbtn bbtn-ghost gap-1.5 px-3 py-1.5 text-xs"><BarChart2 className="h-3.5 w-3.5" /> Analytics</button>

@@ -113,6 +113,19 @@ async function runMigrations() {
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_personal_expenses_user ON personal_expenses(user_id, expense_date DESC)`);
   await pool.query(`CREATE TABLE IF NOT EXISTS personal_budget (user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, monthly_limit BIGINT, savings_goal BIGINT, savings_saved BIGINT NOT NULL DEFAULT 0, updated_at TIMESTAMPTZ NOT NULL DEFAULT now())`);
   console.log('   • Personal Finance tables ready 💰');
+
+  // v6.1: real push notifications (Web Push) + richer notification metadata
+  await pool.query(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'::jsonb`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    endpoint TEXT NOT NULL UNIQUE,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_push_subs_user ON push_subscriptions (user_id)`);
+  console.log('   • Push notifications ready 🔔');
 }
 
 async function main() {

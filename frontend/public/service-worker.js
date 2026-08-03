@@ -56,3 +56,40 @@ self.addEventListener('fetch', (event) => {
     caches.match(request).then((cached) => cached || fetch(request))
   );
 });
+
+// ------------------------------------------------------------
+// PUSH — v6.1: this is what makes a notification show up even
+// when the app/tab is fully closed. The browser wakes this
+// service worker up when a push arrives from our backend
+// (see backend/src/services/push.service.js), regardless of
+// whether SquadPay is open anywhere.
+// ------------------------------------------------------------
+self.addEventListener('push', (event) => {
+  let data = { title: 'SquadPay', body: 'Naya update aaya hai 🔔', url: '/app' };
+  try { if (event.data) data = { ...data, ...event.data.json() }; } catch {}
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      data: { url: data.url || '/app' },
+      tag: data.notificationId || undefined, // dedupes if the same notification is pushed twice
+    })
+  );
+});
+
+// Clicking the OS notification focuses an already-open SquadPay tab if one
+// exists, otherwise opens a new one — either way, lands on the right squad.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || '/app';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ('focus' in client) { client.navigate(targetUrl); return client.focus(); }
+      }
+      return self.clients.openWindow(targetUrl);
+    })
+  );
+});

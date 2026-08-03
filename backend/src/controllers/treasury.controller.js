@@ -6,6 +6,7 @@
 import { query, pool } from '../config/db.js';
 import { ApiError } from '../middleware/errorHandler.js';
 import { awardXp } from '../services/xp.service.js';
+import { createNotificationForSquad } from './notification.controller.js';
 
 const fmt = (p) => (p / 100).toFixed(2);
 
@@ -92,6 +93,15 @@ export async function addContribution(req, res, next) {
     await client.query('COMMIT');
 
     await awardXp(squadId, req.user.id, 'treasury.contributed', 30, { amount: amt });
+
+    createNotificationForSquad({
+      squadId,
+      excludeUserId: req.user.id,
+      type: 'treasury_contribution',
+      message: `${req.user.name} ne treasury mein ₹${fmt(amt)} daala 🏦`,
+      metadata: { amount: amt },
+    });
+
     res.status(201).json({ success:true, contribution: rows[0] });
   } catch(err) { await client.query('ROLLBACK'); next(err); }
   finally { client.release(); }

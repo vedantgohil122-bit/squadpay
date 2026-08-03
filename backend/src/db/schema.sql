@@ -1,5 +1,5 @@
 -- ============================================================
--- SQUADPAY DATABASE SCHEMA  (PostgreSQL)  —  v6.0
+-- SQUADPAY DATABASE SCHEMA  (PostgreSQL)  —  v6.1
 -- ============================================================
 -- GOLDEN RULE: all money is stored in PAISE (integers).
 -- ₹18.50 is stored as 1850. Floating point math loses paise
@@ -249,6 +249,7 @@ CREATE TABLE notifications (
   squad_id   UUID REFERENCES squads(id) ON DELETE CASCADE,
   type       TEXT NOT NULL,            -- 'expense_added' | 'settlement' | 'achievement' | ...
   message    TEXT NOT NULL,
+  metadata   JSONB NOT NULL DEFAULT '{}'::jsonb,
   is_read    BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -363,6 +364,21 @@ CREATE TABLE personal_budget (
 );
 
 -- ------------------------------------------------------------
+-- 22. PUSH_SUBSCRIPTIONS — v6.1: real browser push (works even
+-- with the app closed/tab not open), via the Web Push protocol.
+-- One row per device/browser a user has granted permission on —
+-- a user can have several (phone + laptop).
+-- ------------------------------------------------------------
+CREATE TABLE push_subscriptions (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  endpoint   TEXT NOT NULL UNIQUE,   -- unique per browser subscription
+  p256dh     TEXT NOT NULL,          -- encryption key, from PushSubscription.keys
+  auth       TEXT NOT NULL,          -- auth secret, from PushSubscription.keys
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ------------------------------------------------------------
 -- INDEXES — the queries we will run thousands of times
 -- ------------------------------------------------------------
 CREATE INDEX idx_members_squad          ON squad_members (squad_id) WHERE status = 'active';
@@ -380,6 +396,7 @@ CREATE INDEX idx_trips_squad            ON trips (squad_id, created_at DESC);
 CREATE INDEX idx_contributions_squad    ON contributions (squad_id, created_at DESC);
 CREATE INDEX idx_treasury_txns_squad    ON treasury_transactions (squad_id, created_at DESC);
 CREATE INDEX idx_personal_expenses_user ON personal_expenses (user_id, expense_date DESC);
+CREATE INDEX idx_push_subs_user         ON push_subscriptions (user_id);
 -- Partial index matching the exact shape of the verify-OTP query: it always
 -- filters WHERE consumed_at IS NULL, so a partial index on just the unconsumed
 -- rows is both smaller and a more precise match than indexing everything.

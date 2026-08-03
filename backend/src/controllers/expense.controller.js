@@ -3,6 +3,7 @@ import { query, pool } from '../config/db.js';
 import { ApiError } from '../middleware/errorHandler.js';
 import { computeShares } from '../services/split.service.js';
 import { awardXp, unlockAchievement, XP } from '../services/xp.service.js';
+import { createNotificationForSquad } from './notification.controller.js';
 
 const expenseSchema = z.object({
   treasuryAmount: z.number().int().min(0).optional().default(0),
@@ -68,6 +69,14 @@ export async function createExpense(req, res, next) {
 
     await awardXp(d.squadId, req.user.id, 'expense.created', XP.EXPENSE_ADDED, { title: d.title, amount: d.amount });
     await unlockAchievement(d.squadId, req.user.id, 'FIRST_EXPENSE');
+
+    createNotificationForSquad({
+      squadId: d.squadId,
+      excludeUserId: req.user.id,
+      type: 'expense_added',
+      message: `${req.user.name} ne "${d.title}" add kiya — ₹${(d.amount / 100).toFixed(0)}`,
+      metadata: { expenseId: rows[0].id, amount: d.amount },
+    });
 
     res.status(201).json({ success: true, expense: rows[0], shares });
   } catch (err) { await client.query('ROLLBACK'); next(err); }

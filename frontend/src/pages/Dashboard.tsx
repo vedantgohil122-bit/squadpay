@@ -7,6 +7,7 @@ import { toRupees } from '../lib/money';
 import { useAuth } from '../store/auth';
 import { Button, Input, Modal, ErrorText, Avatar, FunLoader, MarqueeTape, SoundToggle } from '../components/ui';
 import PersonalFinance from '../components/PersonalFinance';
+import { NotificationBell, NotificationPermissionPrompt } from '../components/NotificationBell';
 import { play, initSound } from '../lib/sound';
 import ProfileModal from '../components/ProfileModal';
 
@@ -62,6 +63,7 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="flex gap-2">
+            <NotificationBell />
             <Button variant="ghost" onClick={() => { setModal('join'); setError(''); }}>
               <KeyRound className="h-4 w-4" /> Join Karo
             </Button>
@@ -70,6 +72,8 @@ export default function Dashboard() {
             </Button>
           </div>
         </div>
+
+        <NotificationPermissionPrompt />
 
         <div className="mb-8">
           <PersonalFinance />
