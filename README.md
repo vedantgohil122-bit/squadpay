@@ -4,6 +4,26 @@
 
 Social expense-tracking web app for friend squads — React + TypeScript + Tailwind v4 + Framer Motion frontend, Node/Express backend, PostgreSQL database.
 
+## 🔔 v6.2 — password verifier fix, mobile-friendly notifications, memory alerts
+
+- **Login's password field no longer falsely claims "Sahi hai ✓."** It used
+  to show a green checkmark the instant you typed *anything*, implying the
+  password had been verified — but nothing had actually been checked against
+  the account yet. Register still shows it (there it's validating real
+  format rules: length, has a number/capital), but login now stays neutral
+  until the server actually confirms the credential.
+- **Notification panel is now a proper mobile bottom sheet**, matching the
+  app's existing pattern (same as the member profile sheet) — full-width,
+  slides up from the bottom, drag handle, on phones. Desktop keeps the
+  small anchored dropdown.
+- **Uploading a memory now notifies the squad** — this was the one action
+  in the app that didn't notify anyone.
+- **Fixed a real crash bug from testing:** a malformed `VAPID_SUBJECT` (e.g.
+  missing `mailto:`) or a mistyped VAPID key used to crash the **entire**
+  backend on startup — login, expenses, everything — because of one
+  optional feature's env var typo. Now it just disables push and logs a
+  warning, same as if the keys were never set at all.
+
 ## 🔔 v6.1 — real push notifications
 
 Notifications now work two ways:
@@ -19,7 +39,8 @@ Notifications now work two ways:
    simulated/local notification.
 
 **What triggers a notification:** someone adds an expense, sends or
-confirms a settlement, joins your squad, or contributes to the treasury.
+confirms a settlement, joins your squad, contributes to the treasury, or
+uploads a memory photo.
 
 **Setup:** push notifications are fully optional — the in-app bell always
 works. To enable real push, generate a VAPID keypair and add it to `.env`:
@@ -27,9 +48,16 @@ works. To enable real push, generate a VAPID keypair and add it to `.env`:
 node -e "console.log(require('web-push').generateVAPIDKeys())"
 ```
 Copy the `publicKey`/`privateKey` into `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`
-in `backend/.env`, then run `npm run setup` to add the new
-`push_subscriptions` table. Without these two variables set, the backend
-just skips sending pushes — nothing breaks, the bell still works.
+in `backend/.env`, and set `VAPID_SUBJECT=mailto:you@yourdomain.com`
+(the `mailto:` prefix is required — without it, older versions of this
+crashed the backend; v6.2 fixes that, but the prefix is still needed for
+push to actually work). Then run `npm run setup` to add the new
+`push_subscriptions` table. Without these variables set, the backend just
+skips sending pushes — nothing breaks, the bell still works.
+
+**iOS note:** push only works on iPhone if SquadPay is added to the home
+screen (Share → Add to Home Screen) on iOS 16.4+. A regular Safari tab
+cannot receive push at all — that's an Apple platform restriction.
 
 **Note on the `arena` branch:** this reuses the useful parts of the
 unmerged notification work that was sitting in `arena/019fa459-squadpay`

@@ -12,6 +12,7 @@ const TYPE_ICON: Record<string, string> = {
   settlement_completed: '✅',
   member_joined: '👋',
   treasury_contribution: '🏦',
+  memory_uploaded: '📸',
   achievement: '🏆',
   default: '🔔',
 };
@@ -60,16 +61,36 @@ export function NotificationBell({ squadId }: { squadId?: string }) {
           <>
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40" onClick={() => setOpen(false)}
+              className="fixed inset-0 z-40"
+              style={{ background: 'rgba(0,0,0,0.6)' }}
+              onClick={() => setOpen(false)}
             />
+            {/* Mobile: full-width sheet sliding up from the bottom (matches MemberSheet).
+                Desktop (sm+): small anchored dropdown under the bell, as before. */}
             <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.96 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="absolute right-0 top-12 z-50 w-80 sm:w-96 rounded-2xl overflow-hidden shadow-2xl"
-              style={{ background: 'var(--color-ink-900)', border: '2px solid var(--color-bone)', maxHeight: '70vh' }}
+              initial={{ y: '100%', opacity: 1 }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 340 }}
+              className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-lg
+                         sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-12 sm:mx-0 sm:w-96"
+              style={{
+                background: 'var(--color-ink-900)',
+                borderTop: '2px solid var(--color-bone)',
+                borderLeft: '2px solid var(--color-bone)',
+                borderRight: '2px solid var(--color-bone)',
+                borderBottom: '2px solid var(--color-bone)',
+                borderRadius: '1.5rem 1.5rem 0 0',
+                maxHeight: '80vh',
+                overflow: 'hidden',
+                boxShadow: '0 -8px 30px rgba(0,0,0,0.4)',
+              }}
             >
+              {/* Drag handle — mobile only, signals "swipe down to close" */}
+              <div className="flex justify-center pt-3 pb-1 sm:hidden">
+                <div className="h-1 w-10 rounded-full" style={{ background: 'rgba(245,240,232,0.25)' }} />
+              </div>
+
               <div className="flex items-center justify-between p-4" style={{ borderBottom: '2px solid rgba(245,240,232,0.12)' }}>
                 <div>
                   <h3 className="font-display font-extrabold text-sm" style={{ color: 'var(--color-bone)' }}>
@@ -159,9 +180,9 @@ export function NotificationPermissionPrompt() {
   if (!show) return null;
 
   return (
-    <div className="bcard bcard-yellow p-4 flex items-center justify-between gap-3 mb-4">
-      <div className="flex items-center gap-3">
-        <span className="text-xl">🔔</span>
+    <div className="bcard bcard-yellow p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+      <div className="flex items-start gap-3">
+        <span className="text-xl shrink-0">🔔</span>
         <div>
           <p className="font-display font-bold text-sm" style={{ color: 'var(--color-bone)' }}>Notifications on karo?</p>
           <p className="text-xs" style={{ color: 'rgba(245,240,232,0.6)' }}>
@@ -169,7 +190,7 @@ export function NotificationPermissionPrompt() {
           </p>
         </div>
       </div>
-      <div className="flex gap-2 shrink-0">
+      <div className="flex gap-2 shrink-0 self-end sm:self-auto">
         <button
           onClick={() => { localStorage.setItem('squadpay_notif_prompt_seen', '1'); setShow(false); }}
           className="bbtn bbtn-ghost px-3 py-1.5 text-xs"

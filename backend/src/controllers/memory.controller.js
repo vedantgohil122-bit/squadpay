@@ -4,6 +4,7 @@ import multer from 'multer';
 import { query } from '../config/db.js';
 import { ApiError } from '../middleware/errorHandler.js';
 import { awardXp } from '../services/xp.service.js';
+import { createNotificationForSquad } from './notification.controller.js';
 
 const storage = multer.diskStorage({
   destination: 'uploads/',
@@ -34,6 +35,15 @@ export async function createMemory(req, res, next) {
       [squadId, req.user.id, `/uploads/${req.file.filename}`, (caption || '').slice(0, 200)]
     );
     await awardXp(squadId, req.user.id, 'memory.uploaded', 15, { caption: caption || '' });
+
+    createNotificationForSquad({
+      squadId,
+      excludeUserId: req.user.id,
+      type: 'memory_uploaded',
+      message: `${req.user.name} ne ek naya memory daala 📸${caption ? ` — "${caption.slice(0, 40)}"` : ''}`,
+      metadata: { photoId: rows[0].id },
+    });
+
     res.status(201).json({ success: true, memory: rows[0] });
   } catch (err) { next(err); }
 }

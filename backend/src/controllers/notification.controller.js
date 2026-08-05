@@ -8,6 +8,7 @@ const TYPE_EMOJI = {
   settlement_completed: '✅',
   member_joined: '👋',
   treasury_contribution: '🏦',
+  memory_uploaded: '📸',
   achievement: '🏆',
   default: '🔔',
 };

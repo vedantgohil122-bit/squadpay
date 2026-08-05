@@ -17,8 +17,17 @@ const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:support@squadpay.app'
 
 let enabled = false;
 if (VAPID_PUBLIC && VAPID_PRIVATE) {
-  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
-  enabled = true;
+  try {
+    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
+    enabled = true;
+  } catch (err) {
+    // A malformed key/subject (e.g. VAPID_SUBJECT missing "mailto:", or a key
+    // with stray characters from a copy-paste) used to throw here and crash
+    // the ENTIRE backend on startup — login, expenses, everything — just
+    // because one optional feature's env var had a typo. Now it just
+    // disables push and logs why, same as if the keys were never set.
+    console.error('⚠️  Invalid VAPID configuration, push notifications disabled:', err.message);
+  }
 } else {
   console.warn('⚠️  VAPID keys not set — push notifications disabled (in-app bell still works)');
 }

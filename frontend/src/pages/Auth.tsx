@@ -44,15 +44,20 @@ function getStrength(p: string): { score: number; label: string; color: string }
 }
 
 // ── FIELD COMPONENT ─────────────────────────────────────────
-function Field({ label, type = 'text', value, onChange, onBlur, error, touched, placeholder, children }: {
+// showValidation controls whether a passing local check gets the green
+// "Sahi hai ✓" treatment. Login's password field passes showValidation={false}
+// deliberately — a non-empty password isn't a *correct* password, and
+// showing a green checkmark for it falsely implied the credential had been
+// verified before the server ever saw it.
+function Field({ label, type = 'text', value, onChange, onBlur, error, touched, placeholder, children, showValidation = true }: {
   label: string; type?: string; value: string; placeholder?: string;
   onChange: (v: string) => void; onBlur: () => void;
-  error: string; touched: boolean; children?: React.ReactNode;
+  error: string; touched: boolean; children?: React.ReactNode; showValidation?: boolean;
 }) {
   const [show, setShow] = useState(false);
   const isPassword = type === 'password';
   const hasError = touched && error;
-  const isValid = touched && !error && value;
+  const isValid = showValidation && touched && !error && value;
 
   return (
     <div className="space-y-1.5">
@@ -255,7 +260,8 @@ function AuthCard({ mode }: { mode: 'login' | 'register' }) {
                       placeholder={mode === 'register' ? 'Min 8 characters' : 'Tumhara password'}
                       error={errors.password} touched={touched.password}
                       onChange={(v) => setForm({ ...form, password: v })}
-                      onBlur={() => touch('password')}>
+                      onBlur={() => touch('password')}
+                      showValidation={mode === 'register'}>
                       {mode === 'register' && form.password && (
                         <div className="mt-1.5">
                           <div className="flex gap-1 mb-1">
