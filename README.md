@@ -4,6 +4,42 @@
 
 Social expense-tracking web app for friend squads — React + TypeScript + Tailwind v4 + Framer Motion frontend, Node/Express backend, PostgreSQL database.
 
+## 🚪 v6.3 — Leave Squad, Delete Squad, mobile overflow fixes, broken images fixed
+
+**Leave Squad** (new) — `POST /squads/:id/leave`. Blocked if you have a
+nonzero balance (must settle up first), a pending settlement in-flight, or
+you're the squad's only admin while other members remain (would strand the
+squad). If you're the last member overall, leaving is allowed — nobody's
+left stranded.
+
+**Delete Squad** (new) — `DELETE /squads/:id`, admin-only, requires typing
+the squad's exact name to confirm. Relies on the cascade-delete foreign
+keys already in the schema (expenses, trips, photos, treasury, settlements,
+etc. all clean up automatically) — no new schema needed.
+
+**Memory photos not displaying — root cause found and fixed.** Uploaded
+images are static files served by the *backend* (Render) at a relative
+path like `/uploads/xxx.png`. The frontend (Vercel) is a different origin
+in production, so `<img src="/uploads/...">` resolved against the wrong
+domain and 404'd. This was silently breaking **avatars everywhere in the
+app too** — same root cause, one shared `Avatar` component, so one fix
+covers both. Added `assetUrl()` in `lib/api.ts`, applied to Avatar,
+Memories, trip photos, and Wrapped photos.
+
+**Mobile fixes** (verified at 320/375/390/414/768px):
+- SquadPage's top nav (bell + sound toggle + Analytics + invite code)
+  overflowed off-screen on narrow phones — consolidated into a `⋮` menu
+  (also the new home for Leave/Delete Squad)
+- Dashboard's header buttons and the create-squad emoji picker could
+  overflow at 320px — now wrap instead of clipping
+- The expense split-type picker ("equal/percentage/shares/custom") crammed
+  "percentage" into an unreadably narrow cell below ~360px — now 2 columns
+  on mobile, 4 on desktop (unchanged)
+- **The shared `Modal` component had no scroll handling** — a tall form
+  (Add Expense, with 8+ fields) could push its Submit button below the
+  viewport with no way to scroll to it on a short screen. Fixed once, in
+  the one shared component every modal uses.
+
 ## 🔔 v6.2 — password verifier fix, mobile-friendly notifications, memory alerts
 
 - **Login's password field no longer falsely claims "Sahi hai ✓."** It used

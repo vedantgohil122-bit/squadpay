@@ -5,7 +5,7 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, Send, Trash2, MessageCircle, Heart } from 'lucide-react';
-import { api, apiUpload } from '../lib/api';
+import { api, apiUpload, assetUrl } from '../lib/api';
 import { timeAgo } from '../lib/money';
 import { useAuth } from '../store/auth';
 import { Button, Avatar, FunLoader, ErrorText } from './ui';
@@ -143,7 +143,7 @@ function MemoryCard({ m, meId, isAdmin, onReact, onDelete, onChanged }: {
             <p className="text-2xl animate-pulse">📸</p>
           </div>
         )}
-        <img src={m.url} alt={m.caption || 'memory'} onLoad={() => setImgLoaded(true)}
+        <img src={assetUrl(m.url)} alt={m.caption || 'memory'} onLoad={() => setImgLoaded(true)}
           className={`aspect-square w-full object-cover transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`} />
         {(m.uploaded_by === meId || isAdmin) && (
           <button onClick={() => onDelete(m.id)}

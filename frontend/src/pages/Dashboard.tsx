@@ -56,13 +56,13 @@ export default function Dashboard() {
         <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
           <div>
             <h1 className="font-display text-2xl font-extrabold sm:text-3xl" style={{ color: '#f5f0e8' }}>
-              Kya haal, {user?.name?.split(' ')[0]} 👋
+              Hey {user?.name?.split(' ')[0]} 👋
             </h1>
             <p className="mt-1 text-sm" style={{ color: 'rgba(245,240,232,0.5)' }}>
               Tumhare squads, tumhara chaos — hisaab humara. 🧮
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 justify-end">
             <NotificationBell />
             <Button variant="ghost" onClick={() => { setModal('join'); setError(''); }}>
               <KeyRound className="h-4 w-4" /> Join Karo
@@ -116,7 +116,7 @@ export default function Dashboard() {
           <Input label="Squad ka naam" placeholder="Mumbai Boys" value={name} onChange={(e) => setName(e.target.value)} required />
           <label className="block">
             <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider" style={{ color: 'rgba(245,240,232,0.5)' }}>Vibe</span>
-            <div className="flex gap-2">{['🔥','🍕','🧳','🎬','⚡','🌊'].map((e) => (
+            <div className="flex flex-wrap gap-2">{['🔥','🍕','🧳','🎬','⚡','🌊'].map((e) => (
               <button key={e} type="button" onClick={() => setEmoji(e)}
                 className={`rounded-xl p-2.5 text-xl transition active:scale-90 border-2 ${emoji === e ? 'border-marigold bg-marigold/20' : 'border-bone/20 bg-ink-800'}`}>{e}</button>
             ))}</div>

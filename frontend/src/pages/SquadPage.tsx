@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Plus, Copy, Check, Receipt, Handshake, Users as UsersIcon,
          Activity, Trash2, ChevronDown, Clock, BadgeCheck, XCircle,
-         Trophy, RefreshCw, Play, Camera, BarChart2, Download } from 'lucide-react';
+         Trophy, RefreshCw, Play, Camera, BarChart2, Download, MoreVertical, LogOut } from 'lucide-react';
 import { api } from '../lib/api';
 import { toRupees, toPaise, timeAgo } from '../lib/money';
 import { useAuth } from '../store/auth';
@@ -51,6 +51,12 @@ export default function SquadPage() {
   const [copied, setCopied] = useState(false);
   const [confetti, setConfetti] = useState(false);
   const [toast, setToast] = useState<string|null>(null);
+  const [showMenu, setShowMenu] = useState(false);
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteTypedName, setDeleteTypedName] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
 
   const load = useCallback(async () => {
     const [d, e, s] = await Promise.all([
@@ -86,6 +92,28 @@ export default function SquadPage() {
   const celebrate = () => { play('success'); setTimeout(() => play('confetti'), 200); setConfetti(true); popToast(pick(LINES.settled)); setTimeout(() => setConfetti(false), 2200); };
   const expenseToast = () => { play('coin'); popToast(pick(LINES.expenseAdded)); };
   const copyCode = () => { navigator.clipboard.writeText(detail!.squad.invite_code); setCopied(true); setTimeout(() => setCopied(false), 1500); };
+
+  const handleLeaveSquad = async () => {
+    setActionLoading(true); setActionError('');
+    try {
+      await api(`/squads/${id}/leave`, { method: 'POST' });
+      nav('/app');
+    } catch (e: any) {
+      setActionError(e.message || 'Leave nahi ho paya');
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteSquad = async () => {
+    setActionLoading(true); setActionError('');
+    try {
+      await api(`/squads/${id}`, { method: 'DELETE' });
+      nav('/app');
+    } catch (e: any) {
+      setActionError(e.message || 'Delete nahi ho paya');
+      setActionLoading(false);
+    }
+  };
 
   if (!detail) return (
     <main className="flex min-h-screen flex-col" style={{ background:'#0e0c0a' }}>
@@ -124,13 +152,55 @@ export default function SquadPage() {
         <div className="flex items-center gap-2">
           <NotificationBell squadId={id} />
           <SoundToggle />
+          {/* Desktop-only quick buttons — on mobile these (plus Leave/Delete) live in the ⋮ menu instead, since 5 unwrapped items here overflowed narrow screens */}
           <button onClick={() => setTab('fun')}
-            className="bbtn bbtn-ghost gap-1.5 px-3 py-1.5 text-xs"><BarChart2 className="h-3.5 w-3.5" /> Analytics</button>
+            className="hidden sm:inline-flex bbtn bbtn-ghost gap-1.5 px-3 py-1.5 text-xs"><BarChart2 className="h-3.5 w-3.5" /> Analytics</button>
           <button onClick={copyCode}
-            className="bbtn bbtn-ghost gap-1.5 px-3 py-1.5 text-xs font-mono">
+            className="hidden sm:inline-flex bbtn bbtn-ghost gap-1.5 px-3 py-1.5 text-xs font-mono">
             {copied ? <Check className="h-3.5 w-3.5" style={{color:'#34d399'}}/> : <Copy className="h-3.5 w-3.5" />}
             {squad.invite_code}
           </button>
+          <div className="relative">
+            <button onClick={() => { initSound(); play('tap'); setShowMenu(!showMenu); }}
+              className="rounded-xl p-2.5 border-2 transition active:scale-90"
+              style={{ background:'#0e0c0a', borderColor:'rgba(245,240,232,0.2)', color:'#f5f0e8' }} title="Squad options">
+              <MoreVertical className="h-4 w-4" />
+            </button>
+            <AnimatePresence>
+              {showMenu && (
+                <>
+                  <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+                    className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+                  <motion.div initial={{opacity:0,y:-8,scale:0.96}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:-8,scale:0.96}}
+                    transition={{type:'spring',damping:25,stiffness:300}}
+                    className="absolute right-0 top-12 z-50 w-56 rounded-2xl overflow-hidden"
+                    style={{ background:'#1a1613', border:'2px solid #f5f0e8', boxShadow:'0 8px 30px rgba(0,0,0,0.4)' }}>
+                    <button onClick={() => { setTab('fun'); setShowMenu(false); }}
+                      className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-bold sm:hidden"
+                      style={{ color:'#f5f0e8', borderBottom:'1px solid rgba(245,240,232,0.1)' }}>
+                      <BarChart2 className="h-4 w-4" /> Analytics
+                    </button>
+                    <button onClick={() => { copyCode(); setShowMenu(false); }}
+                      className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-bold sm:hidden"
+                      style={{ color:'#f5f0e8', borderBottom:'1px solid rgba(245,240,232,0.1)' }}>
+                      <Copy className="h-4 w-4" /> Copy Invite Code
+                    </button>
+                    <button onClick={() => { setShowMenu(false); setActionError(''); setConfirmLeave(true); }}
+                      className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-bold"
+                      style={{ color:'#f5f0e8', borderBottom: isAdmin ? '1px solid rgba(245,240,232,0.1)' : 'none' }}>
+                      <LogOut className="h-4 w-4" /> Leave Squad
+                    </button>
+                    {isAdmin && (
+                      <button onClick={() => { setShowMenu(false); setActionError(''); setDeleteTypedName(''); setConfirmDelete(true); }}
+                        className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-bold" style={{ color:'#ff3d6e' }}>
+                        <Trash2 className="h-4 w-4" /> Delete Squad
+                      </button>
+                    )}
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </nav>
 
@@ -228,6 +298,41 @@ export default function SquadPage() {
         squadId={squad.id} userId={profileUserId} currentUserId={user?.id} />
       <AddExpenseModal open={showAdd} onClose={() => setShowAdd(false)} squadId={squad.id} members={members} meId={user?.id}
         onCreated={() => { setShowAdd(false); expenseToast(); load(); }} />
+
+      <Modal open={confirmLeave} onClose={() => { if (!actionLoading) { setConfirmLeave(false); setActionError(''); } }} title="Squad chhodna hai?">
+        <p className="text-sm mb-4" style={{ color:'rgba(245,240,232,0.7)' }}>
+          Tum <strong style={{ color:'#f5f0e8' }}>{squad.emoji} {squad.name}</strong> chhodne wale ho. Dobara join karne ke liye
+          tumhe naya invite code chahiye hoga.
+        </p>
+        <ErrorText msg={actionError} />
+        <div className="flex gap-2 mt-4">
+          <Button variant="ghost" className="flex-1" onClick={() => { setConfirmLeave(false); setActionError(''); }} disabled={actionLoading}>Cancel</Button>
+          <Button variant="danger" className="flex-1" onClick={handleLeaveSquad} disabled={actionLoading}>
+            {actionLoading ? 'Leaving...' : 'Haan, Leave Karo'}
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal open={confirmDelete} onClose={() => { if (!actionLoading) { setConfirmDelete(false); setActionError(''); } }} title="Squad delete karna hai?">
+        <p className="text-sm mb-3" style={{ color:'rgba(245,240,232,0.7)' }}>
+          Ye <strong style={{ color:'#ff3d6e' }}>permanent</strong> hai — saare expenses, memories, treasury, aur history
+          hamesha ke liye delete ho jayenge. Ye undo nahi ho sakta.
+        </p>
+        <label className="block mb-1">
+          <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider" style={{ color:'rgba(245,240,232,0.5)' }}>
+            Confirm karne ke liye "<strong>{squad.name}</strong>" type karo
+          </span>
+          <input value={deleteTypedName} onChange={(e) => setDeleteTypedName(e.target.value)}
+            placeholder={squad.name} className="binput" />
+        </label>
+        <ErrorText msg={actionError} />
+        <div className="flex gap-2 mt-4">
+          <Button variant="ghost" className="flex-1" onClick={() => { setConfirmDelete(false); setActionError(''); }} disabled={actionLoading}>Cancel</Button>
+          <Button variant="danger" className="flex-1" onClick={handleDeleteSquad} disabled={actionLoading || deleteTypedName !== squad.name}>
+            {actionLoading ? 'Deleting...' : 'Delete Forever'}
+          </Button>
+        </div>
+      </Modal>
     </main>
   );
 }

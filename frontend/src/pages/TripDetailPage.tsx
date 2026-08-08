@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, MoreVertical, CheckCircle2, Archive, Trash2, Trophy, Tag, X, Check, Plus } from 'lucide-react';
-import { api } from '../lib/api';
+import { api, assetUrl } from '../lib/api';
 import { toRupees, timeAgo } from '../lib/money';
 import { Avatar, FunLoader, MarqueeTape } from '../components/ui';
 import { play, initSound } from '../lib/sound';
@@ -236,7 +236,7 @@ export default function TripDetailPage() {
             <p className="sticker sticker-pink mb-3">Trip Memories</p>
             <div className="grid grid-cols-3 gap-2">
               {photos.map((p) => (
-                <img key={p.id} src={p.url} alt={p.caption||'memory'} className="aspect-square w-full rounded-xl object-cover" style={{ border:'2px solid rgba(245,240,232,0.1)' }} />
+                <img key={p.id} src={assetUrl(p.url)} alt={p.caption||'memory'} className="aspect-square w-full rounded-xl object-cover" style={{ border:'2px solid rgba(245,240,232,0.1)' }} />
               ))}
             </div>
           </div>

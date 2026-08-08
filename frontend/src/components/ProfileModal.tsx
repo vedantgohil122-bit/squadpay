@@ -265,7 +265,7 @@ export default function ProfileModal({ open, onClose }: { open: boolean; onClose
           <Input label="Naam" value={name} onChange={(e) => setName(e.target.value)} required />
           <Input label="Bio" value={bio} placeholder="Squad ka finance minister 📊" maxLength={160}
             onChange={(e) => setBio(e.target.value)} />
-          <Input label="UPI ID" value={upiId} placeholder="vedant@oksbi"
+          <Input label="UPI ID" value={upiId} placeholder="yourname@oksbi"
             onChange={(e) => setUpiId(e.target.value)} />
         </div>
 

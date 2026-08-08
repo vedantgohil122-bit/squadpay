@@ -237,7 +237,7 @@ function AuthCard({ mode }: { mode: 'login' | 'register' }) {
               {screen === 'credentials' && (
                 <motion.div key="credentials" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <h1 className="font-display text-xl font-extrabold" style={{ color: '#f5f0e8' }}>
-                    {mode === 'login' ? 'Wapis aao! 👋' : 'Squad mein aao! 🎉'}
+                    {mode === 'login' ? 'Log In' : 'Squad mein aao! 🎉'}
                   </h1>
                   <p className="mt-1 text-xs" style={{ color: 'rgba(245,240,232,0.5)' }}>
                     {mode === 'login' ? 'Squad tumhara intezaar kar rahi hai.' : 'Email OTP se secure — 30 second mein hisaab shuru.'}
@@ -245,7 +245,7 @@ function AuthCard({ mode }: { mode: 'login' | 'register' }) {
 
                   <form onSubmit={submit} className="mt-6 space-y-4" noValidate>
                     {mode === 'register' && (
-                      <Field label="Naam" value={form.name} placeholder="Vedant"
+                      <Field label="Naam" value={form.name} placeholder="Aman"
                         error={errors.name} touched={touched.name}
                         onChange={(v) => setForm({ ...form, name: v })}
                         onBlur={() => touch('name')} />

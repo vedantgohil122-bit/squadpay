@@ -103,7 +103,7 @@ export default function AddExpenseModal({
 
         <label className="block">
           <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider" style={{ color: 'rgba(245,240,232,0.5)' }}>Split type</span>
-          <div className="grid grid-cols-4 gap-1.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
             {(['equal', 'percentage', 'shares', 'custom'] as const).map((t) => (
               <button key={t} type="button" onClick={() => setForm({ ...form, splitType: t })}
                 className={`rounded-xl py-2 text-[11px] font-bold border-2 transition active:scale-95 ${form.splitType === t ? 'border-aqua bg-aqua/20 text-aqua' : 'border-bone/10 bg-ink-800'}`}

@@ -23,6 +23,20 @@ export async function api<T = any>(path: string, options: RequestInit = {}): Pro
   return data as T;
 }
 
+// Converts a backend-relative asset path (e.g. "/uploads/xxx.png") into an
+// absolute URL pointing at the backend. Uploaded images (memory photos,
+// avatars) are static files served BY THE BACKEND, but the backend stores
+// only the relative path. In production the frontend (Vercel) and backend
+// (Render) are different origins — a bare relative <img src="/uploads/..">
+// resolves against the frontend's own origin and 404s. Already-absolute
+// URLs (http/https — e.g. DiceBear-generated avatars) pass through as-is.
+export function assetUrl(path?: string | null): string {
+  if (!path) return '';
+  if (/^https?:\/\//i.test(path)) return path;
+  const origin = BASE.replace(/\/api\/?$/, '');
+  return `${origin}${path}`;
+}
+
 // Multipart upload wrapper — same BASE-resolution + auth + error-unwrapping as
 // api(), but for FormData (avatars, memory photos). v5.9 had these upload
 // calls using bare relative fetch('/api/...') paths, which only worked on

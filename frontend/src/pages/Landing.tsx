@@ -92,7 +92,7 @@ export default function Landing() {
               <p className="font-display text-3xl font-extrabold" style={{ color: '#f5a623' }}>₹12,400</p>
             </div>
             {[
-              { name: 'Vedant', net: '+₹3,200', green: true },
+              { name: 'Priya', net: '+₹3,200', green: true },
               { name: 'Rahul', net: '-₹1,800', green: false },
               { name: 'Arjun', net: '-₹1,400', green: false },
             ].map((m) => (

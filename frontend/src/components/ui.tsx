@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, X, Volume2, VolumeX } from 'lucide-react';
 import { play, initSound, isSoundEnabled, setSoundEnabled } from '../lib/sound';
+import { assetUrl } from '../lib/api';
 import { ReactNode, useEffect, useState } from 'react';
 import { LINES as HINGLISH_LINES } from '../lib/hinglish';
 
@@ -41,9 +42,9 @@ export const Input = ({ label, ...props }: { label: string } & React.InputHTMLAt
 export const Modal = ({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) => {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-sm" onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.92, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bcard bcard-yellow w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+        className="bcard bcard-yellow my-8 w-full max-w-md max-h-[85vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-lg font-extrabold">{title}</h2>
           <button onClick={onClose} className="rounded-lg p-1.5 text-bone/50 hover:bg-white/10 hover:text-bone"><X className="h-4 w-4" /></button>
@@ -56,7 +57,7 @@ export const Modal = ({ open, onClose, title, children }: { open: boolean; onClo
 
 /* ── AVATAR ── */
 export const Avatar = ({ url, name, size = 'h-9 w-9' }: { url?: string | null; name: string; size?: string }) =>
-  url ? <img src={url} alt={name} className={`${size} rounded-full border-2 border-bone/20 bg-ink-800`} />
+  url ? <img src={assetUrl(url)} alt={name} className={`${size} rounded-full border-2 border-bone/20 bg-ink-800`} />
       : <div className={`${size} flex items-center justify-center rounded-full border-2 border-marigold bg-ink-800 font-display font-extrabold text-marigold`} style={{ fontSize: '0.75rem' }}>{name[0]}</div>;
 
 /* ── SPINNER / FUN LOADER ── */

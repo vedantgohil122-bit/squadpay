@@ -7,6 +7,8 @@ const TYPE_EMOJI = {
   settlement_pending: '💸',
   settlement_completed: '✅',
   member_joined: '👋',
+  member_left: '👋',
+  squad_deleted: '🗑️',
   treasury_contribution: '🏦',
   memory_uploaded: '📸',
   achievement: '🏆',

@@ -3,7 +3,7 @@ import { query, pool } from '../config/db.js';
 import { ApiError } from '../middleware/errorHandler.js';
 import { getBalances, simplifyDebts } from '../services/balance.service.js';
 import { awardXp, XP } from '../services/xp.service.js';
-import { createNotificationForSquad } from './notification.controller.js';
+import { createNotification, createNotificationForSquad } from './notification.controller.js';
 
 const inviteCode = () => crypto.randomBytes(4).toString('hex').toUpperCase(); // e.g. 9F3A1C2B
 
@@ -196,7 +196,107 @@ export async function memberProfile(req, res, next) {
 }
 
 
-// Admin sets/updates member's UPI ID (only admin can set; all can view)
+// Member leaves a squad voluntarily. Blocked if: they still have a nonzero
+// balance (unsettled money either way), they have a pending settlement
+// in-flight, or they're the squad's only admin while other members remain
+// (leaving would strand the squad with no one able to manage it).
+export async function leaveSquad(req, res, next) {
+  const client = await pool.connect();
+  try {
+    const { id: squadId } = req.params;
+    const userId = req.user.id;
+
+    const me = (await client.query(
+      `SELECT role FROM squad_members WHERE squad_id=$1 AND user_id=$2 AND status='active'`,
+      [squadId, userId]
+    )).rows[0];
+    if (!me) throw new ApiError(403, 'Not a member of this squad');
+
+    // Must be fully settled — reuses the same balance engine the UI shows.
+    const balances = await getBalances(squadId);
+    const myBalance = balances.find((b) => b.userId === userId);
+    if (myBalance && myBalance.net !== 0) {
+      const amt = (Math.abs(myBalance.net) / 100).toFixed(0);
+      throw new ApiError(400, myBalance.net > 0
+        ? `Pehle settle karo — squad tumhe ₹${amt} deta hai`
+        : `Pehle settle karo — tum squad ko ₹${amt} dete ho`);
+    }
+
+    // Any in-flight (pending) settlement involving this user blocks leaving
+    // too — otherwise it'd be left dangling with no way to confirm/reject.
+    const pending = (await client.query(
+      `SELECT 1 FROM settlements WHERE squad_id=$1 AND status='pending' AND (from_user=$2 OR to_user=$2)`,
+      [squadId, userId]
+    )).rows;
+    if (pending.length) throw new ApiError(400, 'Pending settlements pehle confirm ya reject karo');
+
+    // Last-admin check: only blocks if OTHER members would be left behind
+    // with no admin at all. If this user is the last member overall,
+    // there's nobody to strand — leaving is fine (deleting the empty squad
+    // is a separate, explicit action).
+    if (me.role === 'admin') {
+      const others = (await client.query(
+        `SELECT role FROM squad_members WHERE squad_id=$1 AND user_id<>$2 AND status='active'`,
+        [squadId, userId]
+      )).rows;
+      const otherAdmins = others.filter((o) => o.role === 'admin').length;
+      if (others.length > 0 && otherAdmins === 0) {
+        throw new ApiError(400, 'Squad mein koi aur admin nahi hai — pehle kisi ko admin banao');
+      }
+    }
+
+    await client.query('BEGIN');
+    await client.query(`UPDATE squad_members SET status='left' WHERE squad_id=$1 AND user_id=$2`, [squadId, userId]);
+    await client.query('COMMIT');
+
+    createNotificationForSquad({
+      squadId, excludeUserId: userId, type: 'member_left',
+      message: `${req.user.name} squad chhod gaya 👋`,
+    });
+
+    res.json({ success: true });
+  } catch (err) { await client.query('ROLLBACK').catch(() => {}); next(err); }
+  finally { client.release(); }
+}
+
+// Admin-only, permanent. Squads have no soft-delete column (unlike expenses),
+// and every dependent table (squad_members, expenses, trips, photos,
+// treasury, contributions, treasury_transactions, settlements,
+// notifications, activity_log) already has ON DELETE CASCADE on squad_id —
+// so a single DELETE cleans up everything consistently via the existing
+// schema, with no orphaned rows.
+export async function deleteSquad(req, res, next) {
+  try {
+    const { id: squadId } = req.params;
+    const me = (await query(
+      `SELECT role FROM squad_members WHERE squad_id=$1 AND user_id=$2 AND status='active'`,
+      [squadId, req.user.id]
+    )).rows[0];
+    if (!me) throw new ApiError(403, 'Not a member of this squad');
+    if (me.role !== 'admin') throw new ApiError(403, 'Sirf admin squad delete kar sakta hai');
+
+    const squad = (await query(`SELECT name, emoji FROM squads WHERE id=$1`, [squadId])).rows[0];
+    if (!squad) throw new ApiError(404, 'Squad not found');
+
+    // Capture members before the cascade wipes squad_members out from under us.
+    const members = (await query(
+      `SELECT user_id FROM squad_members WHERE squad_id=$1 AND status='active' AND user_id<>$2`,
+      [squadId, req.user.id]
+    )).rows;
+
+    await query(`DELETE FROM squads WHERE id=$1`, [squadId]);
+
+    // squad_id is null here on purpose — the squad row (and its cascaded
+    // notifications) is already gone, so this notification carries the
+    // squad's name directly in the message instead of relying on a join.
+    members.forEach((m) => createNotification({
+      userId: m.user_id, squadId: null, type: 'squad_deleted',
+      message: `${req.user.name} ne "${squad.emoji} ${squad.name}" squad delete kar diya`,
+    }));
+
+    res.json({ success: true });
+  } catch (err) { next(err); }
+}
 export async function setMemberUpi(req, res, next) {
   try {
     const { id: squadId, userId } = req.params;
