@@ -4,6 +4,7 @@ import { sendPushToUser, isPushEnabled, getVapidPublicKey } from '../services/pu
 
 const TYPE_EMOJI = {
   expense_added: '🧾',
+  expense_edited: '✏️',
   settlement_pending: '💸',
   settlement_completed: '✅',
   settlement_reminder: '🔔',

@@ -11,19 +11,27 @@ import { Button, Input, Modal, ErrorText, Avatar } from './ui';
 
 interface Member { id: string; name: string; avatar_url?: string }
 interface TripOption { id: string; name: string; emoji: string; status: string }
+interface EditableExpense {
+  id: string; title: string; amount: number; category: string; paid_by: string;
+  split_type: 'equal' | 'percentage' | 'custom' | 'shares'; treasury_amount?: number; trip_id?: string | null;
+  participants?: { userId: string; shareAmount: number; shareValue?: number | null }[];
+}
 
 const CATS = ['food','travel','movies','fuel','events','shopping','stay','other'] as const;
 const CE: Record<string,string> = { food:'🍕',travel:'🚕',movies:'🎬',fuel:'⛽',events:'🎉',shopping:'🛍️',stay:'🏨',other:'📦' };
 
 export default function AddExpenseModal({
-  open, onClose, squadId, members, meId, onCreated, presetTripId, presetTripLabel,
+  open, onClose, squadId, members, meId, onCreated, presetTripId, presetTripLabel, editingExpense,
 }: {
   open: boolean; onClose: () => void; squadId: string; members: Member[]; meId?: string; onCreated: () => void;
   /** When set (e.g. opened from inside a Trip page), the trip field is pre-filled and locked. */
   presetTripId?: string;
   /** Display label for the locked trip, e.g. "🏖️ Goa Trip" */
   presetTripLabel?: string;
+  /** When set, the modal edits this existing expense instead of creating a new one. */
+  editingExpense?: EditableExpense | null;
 }) {
+  const isEdit = !!editingExpense;
   const [form, setForm] = useState({
     title: '', amount: '', category: 'food', paidBy: meId || '',
     splitType: 'equal' as 'equal' | 'percentage' | 'custom' | 'shares',
@@ -45,12 +53,37 @@ export default function AddExpenseModal({
   }, [open, squadId, presetTripId]);
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+    if (editingExpense) {
+      // Prefill everything from the expense being edited, including the
+      // original raw % / shares input (shareValue) — not just the computed
+      // paise amount — so re-editing a percentage split shows "60" again,
+      // not a derived approximation.
+      setForm({
+        title: editingExpense.title,
+        amount: (editingExpense.amount / 100).toString(),
+        category: editingExpense.category,
+        paidBy: editingExpense.paid_by,
+        splitType: editingExpense.split_type,
+        treasuryAmount: editingExpense.treasury_amount ? (editingExpense.treasury_amount / 100).toString() : '',
+        tripId: editingExpense.trip_id || '',
+      });
+      const participantIds = new Set((editingExpense.participants || []).map((p) => p.userId));
+      setSelected(Object.fromEntries(members.map((m) => [m.id, participantIds.has(m.id)])));
+      const v: Record<string, string> = {};
+      (editingExpense.participants || []).forEach((p) => {
+        v[p.userId] = editingExpense.split_type === 'custom'
+          ? (p.shareAmount / 100).toString()
+          : (p.shareValue ?? '').toString();
+      });
+      setValues(v);
+      setError('');
+    } else {
       setSelected(Object.fromEntries(members.map((m) => [m.id, true])));
       setForm((f) => ({ ...f, paidBy: meId || members[0]?.id || '', tripId: presetTripId || '' }));
       setValues({}); setError('');
     }
-  }, [open, members, meId, presetTripId]);
+  }, [open, members, meId, presetTripId, editingExpense]);
 
   const chosen = members.filter((m) => selected[m.id]);
 
@@ -61,22 +94,24 @@ export default function AddExpenseModal({
         userId: m.id,
         ...(form.splitType !== 'equal' ? { value: form.splitType === 'custom' ? toPaise(values[m.id] || 0) : Number(values[m.id] || 0) } : {}),
       }));
-      await api('/expenses', {
-        method: 'POST',
-        body: JSON.stringify({
-          squadId, title: form.title, amount: toPaise(form.amount), category: form.category,
-          paidBy: form.paidBy, splitType: form.splitType, participants,
-          treasuryAmount: form.treasuryAmount ? toPaise(form.treasuryAmount) : 0,
-          tripId: form.tripId || null,
-        }),
-      });
+      const body = {
+        squadId, title: form.title, amount: toPaise(form.amount), category: form.category,
+        paidBy: form.paidBy, splitType: form.splitType, participants,
+        treasuryAmount: form.treasuryAmount ? toPaise(form.treasuryAmount) : 0,
+        tripId: form.tripId || null,
+      };
+      if (isEdit) {
+        await api(`/expenses/${editingExpense!.id}`, { method: 'PATCH', body: JSON.stringify(body) });
+      } else {
+        await api('/expenses', { method: 'POST', body: JSON.stringify(body) });
+      }
       onCreated();
     } catch (err: any) { setError(err.message); }
     finally { setBusy(false); }
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={presetTripId ? `${presetTripLabel || 'Trip'} ka kharcha 🧾` : 'Kharcha add karo 🧾'}>
+    <Modal open={open} onClose={onClose} title={isEdit ? 'Kharcha edit karo ✏️' : presetTripId ? `${presetTripLabel || 'Trip'} ka kharcha 🧾` : 'Kharcha add karo 🧾'}>
       <form onSubmit={submit} className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
         <Input label="Kya tha?" placeholder="Pizza Night 🍕" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
         <Input label="Kitna? (₹)" type="number" step="0.01" min="0.01" placeholder="1800" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} required />
@@ -160,7 +195,7 @@ export default function AddExpenseModal({
 
         <ErrorText msg={error} />
         <Button type="submit" disabled={busy || chosen.length === 0} className="w-full justify-center py-3">
-          {busy ? 'Add ho raha hai...' : 'Kharcha Add Karo ✅'}
+          {busy ? (isEdit ? 'Save ho raha hai...' : 'Add ho raha hai...') : isEdit ? 'Changes Save Karo ✏️' : 'Kharcha Add Karo ✅'}
         </Button>
       </form>
     </Modal>

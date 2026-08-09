@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Plus, Copy, Check, Receipt, Handshake, Users as UsersIcon,
          Activity, Trash2, ChevronDown, Clock, BadgeCheck, XCircle,
-         Trophy, RefreshCw, Play, Camera, BarChart2, Download, MoreVertical, LogOut } from 'lucide-react';
+         Trophy, RefreshCw, Play, Camera, BarChart2, Download, MoreVertical, LogOut, Pencil } from 'lucide-react';
 import { api, BASE } from '../lib/api';
 import { toRupees, toPaise, timeAgo } from '../lib/money';
 import { useAuth } from '../store/auth';
@@ -20,7 +20,7 @@ interface Balance { userId: string; name: string; avatarUrl?: string; net: numbe
 interface Suggestion { from: { userId: string; name: string }; to: { userId: string; name: string; upiId?: string }; amount: number }
 interface Pending { id: string; from_user: string; to_user: string; amount: string; method: string; created_at: string; from_name: string; to_name: string }
 interface Settlement { id: string; from_name: string; to_name: string; amount: string; method: string; status: string; created_at: string }
-interface Expense { id: string; title: string; amount: string; category: string; paid_by: string; paid_by_name: string; expense_date: string; created_by: string; split_type: string; participants: { userId: string; name: string; shareAmount: number }[] }
+interface Expense { id: string; title: string; amount: string; category: string; paid_by: string; paid_by_name: string; expense_date: string; created_by: string; split_type: string; treasury_amount?: string; trip_id?: string | null; participants: { userId: string; name: string; shareAmount: number; shareValue?: number | null }[] }
 interface Detail { squad: { id: string; name: string; emoji: string; invite_code: string }; members: Member[]; balances: Balance[]; suggestions: Suggestion[]; pendingSettlements: Pending[]; activity: { action: string; metadata: any; created_at: string; name: string }[] }
 
 const CATS = ['food','travel','movies','fuel','events','shopping','stay','other'] as const;
@@ -47,6 +47,7 @@ export default function SquadPage() {
   const [history, setHistory] = useState<Settlement[]>([]);
   const [tab, setTab] = useState<'overview'|'expenses'|'settle'|'members'|'memories'|'fun'>('overview');
   const [showAdd, setShowAdd] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [profileUserId, setProfileUserId] = useState<string|null>(null);
   const [copied, setCopied] = useState(false);
   const [confetti, setConfetti] = useState(false);
@@ -328,7 +329,7 @@ export default function SquadPage() {
                   </select>
                 </div>
                 <ExpenseList expenses={filteredExpenses ?? expenses} meId={user?.id} onChanged={load}
-                  onAdd={() => setShowAdd(true)}
+                  onAdd={() => setShowAdd(true)} onEdit={setEditingExpense}
                   hasMore={filteredExpenses ? false : hasMoreExpenses}
                   loadingMore={filtering || loadingMoreExpenses}
                   onLoadMore={filteredExpenses ? undefined : loadMoreExpenses} />
@@ -359,8 +360,15 @@ export default function SquadPage() {
 
       <MemberSheet open={!!profileUserId} onClose={() => setProfileUserId(null)}
         squadId={squad.id} userId={profileUserId} currentUserId={user?.id} />
-      <AddExpenseModal open={showAdd} onClose={() => setShowAdd(false)} squadId={squad.id} members={members} meId={user?.id}
-        onCreated={() => { setShowAdd(false); expenseToast(); load(); }} />
+      <AddExpenseModal open={showAdd || !!editingExpense} onClose={() => { setShowAdd(false); setEditingExpense(null); }}
+        squadId={squad.id} members={members} meId={user?.id}
+        editingExpense={editingExpense ? {
+          ...editingExpense,
+          amount: Number(editingExpense.amount),
+          treasury_amount: editingExpense.treasury_amount ? Number(editingExpense.treasury_amount) : 0,
+          split_type: editingExpense.split_type as 'equal'|'percentage'|'custom'|'shares',
+        } : null}
+        onCreated={() => { setShowAdd(false); setEditingExpense(null); expenseToast(); load(); }} />
 
       <Modal open={confirmLeave} onClose={() => { if (!actionLoading) { setConfirmLeave(false); setActionError(''); } }} title="Squad chhodna hai?">
         <p className="text-sm mb-4" style={{ color:'rgba(245,240,232,0.7)' }}>
@@ -488,7 +496,7 @@ function Overview({ activity, balances, expenses, onMemberClick, squadId }: { ac
 }
 
 /* ─── EXPENSES ─── */
-function ExpenseList({ expenses, meId, onChanged, onAdd, hasMore, loadingMore, onLoadMore }: { expenses:Expense[]; meId?:string; onChanged:()=>void; onAdd:()=>void; hasMore?:boolean; loadingMore?:boolean; onLoadMore?:()=>void }) {
+function ExpenseList({ expenses, meId, onChanged, onAdd, onEdit, hasMore, loadingMore, onLoadMore }: { expenses:Expense[]; meId?:string; onChanged:()=>void; onAdd:()=>void; onEdit:(e:Expense)=>void; hasMore?:boolean; loadingMore?:boolean; onLoadMore?:()=>void }) {
   const [openId, setOpenId] = useState<string|null>(null);
   const del = async (id:string) => { if (!confirm('Ye expense delete karein?')) return; await api(`/expenses/${id}`,{method:'DELETE'}); onChanged(); };
   if (expenses.length===0) return (
@@ -526,9 +534,14 @@ function ExpenseList({ expenses, meId, onChanged, onAdd, hasMore, loadingMore, o
                     ))}
                   </ul>
                   {e.created_by===meId && (
-                    <button onClick={() => del(e.id)} className="bbtn bbtn-pink mt-3 gap-1.5 px-3 py-1.5 text-xs">
-                      <Trash2 className="h-3.5 w-3.5" /> Delete karo
-                    </button>
+                    <div className="mt-3 flex gap-2">
+                      <button onClick={() => onEdit(e)} className="bbtn bbtn-ghost gap-1.5 px-3 py-1.5 text-xs">
+                        <Pencil className="h-3.5 w-3.5" /> Edit karo
+                      </button>
+                      <button onClick={() => del(e.id)} className="bbtn bbtn-pink gap-1.5 px-3 py-1.5 text-xs">
+                        <Trash2 className="h-3.5 w-3.5" /> Delete karo
+                      </button>
+                    </div>
                   )}
                 </div>
               </motion.div>

@@ -35,6 +35,31 @@ so this was a backend-only fix.
 Without these two variables, avatar/photo uploads return a clear error —
 everything else in the app is unaffected.
 
+## ✏️ v6.5 — expense editing
+
+Expenses could only be created or deleted before — no way to fix a typo in
+the amount or title without deleting and losing the treasury link and
+history. Now:
+
+- `PATCH /expenses/:id` — same permission rule as delete (creator or admin).
+- **Treasury handled correctly on edit**, not just recomputed blindly: if
+  the expense was treasury-funded, editing refunds the old amount back to
+  the treasury and deducts the new amount, each logged as its own audit
+  trail entry (a `reversal` + a fresh `expense` transaction) — same pattern
+  already used for delete's treasury refund.
+- **Participant shares are fully recomputed** from the edited split, not
+  patched — old `expense_participants` rows are replaced outright so a
+  switch from "equal" to "percentage" (or changing who's included) can't
+  leave stale rows behind.
+- Reused the existing `AddExpenseModal` for editing instead of building a
+  second form — it now takes an optional `editingExpense` prop and prefills
+  every field, including the original raw % / shares input (not just the
+  computed amount), which required adding `shareValue` to what
+  `listExpenses` returns — it existed in the database already, just wasn't
+  in the API response.
+- Edit button next to Delete in the Expenses tab (same "creator only"
+  visibility rule already used for delete).
+
 ## 🆕 v6.4 — recurring expenses, reminders, search, statement export
 
 Four new features. (Also considered squad polls and receipt-scanning OCR —

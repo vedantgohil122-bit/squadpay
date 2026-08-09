@@ -8,6 +8,7 @@ import { play, initSound } from '../lib/sound';
 
 const TYPE_ICON: Record<string, string> = {
   expense_added: '🧾',
+  expense_edited: '✏️',
   settlement_pending: '💸',
   settlement_completed: '✅',
   settlement_reminder: '🔔',

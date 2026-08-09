@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
-import { createExpense, listExpenses, deleteExpense, exportSquadStatement } from '../controllers/expense.controller.js';
+import { createExpense, listExpenses, deleteExpense, updateExpense, exportSquadStatement } from '../controllers/expense.controller.js';
 const r = Router();
 r.use(requireAuth);
 r.post('/', createExpense);
 r.get('/squad/:squadId', listExpenses);
 r.get('/squad/:squadId/export', exportSquadStatement);
+r.patch('/:id', updateExpense);
 r.delete('/:id', deleteExpense);
 export default r;

@@ -114,7 +114,7 @@ export async function listExpenses(req, res, next) {
 
     const { rows } = await query(
       `SELECT e.*, u.name AS paid_by_name, u.avatar_url AS paid_by_avatar,
-        (SELECT json_agg(json_build_object('userId', ep.user_id, 'name', pu.name, 'shareAmount', ep.share_amount))
+        (SELECT json_agg(json_build_object('userId', ep.user_id, 'name', pu.name, 'shareAmount', ep.share_amount, 'shareValue', ep.share_value))
          FROM expense_participants ep JOIN users pu ON pu.id = ep.user_id WHERE ep.expense_id = e.id) AS participants
        FROM expenses e JOIN users u ON u.id = e.paid_by
        WHERE ${whereSql}
@@ -169,6 +169,83 @@ export async function exportSquadStatement(req, res, next) {
     res.setHeader('Content-Disposition', 'attachment; filename="squad-statement.csv"');
     res.send(lines.join('\n'));
   } catch (err) { next(err); }
+}
+
+// Same validation shape as create, minus squadId — an expense can't be
+// moved to a different squad via edit, only its own fields change.
+const expenseUpdateSchema = expenseSchema.omit({ squadId: true });
+
+export async function updateExpense(req, res, next) {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+    const existing = (await client.query(`SELECT * FROM expenses WHERE id=$1 AND is_deleted=FALSE`, [id])).rows[0];
+    if (!existing) throw new ApiError(404, 'Expense not found');
+
+    const me = (await client.query(
+      `SELECT role FROM squad_members WHERE squad_id=$1 AND user_id=$2 AND status='active'`,
+      [existing.squad_id, req.user.id])).rows[0];
+    if (!me) throw new ApiError(403, 'Not a member of this squad');
+    if (me.role !== 'admin' && existing.created_by !== req.user.id)
+      throw new ApiError(403, 'Only admins or the creator can edit this expense');
+
+    const parsed = expenseUpdateSchema.safeParse(req.body);
+    if (!parsed.success) throw new ApiError(400, parsed.error.issues[0].message);
+    const d = parsed.data;
+
+    const shares = computeShares(d.amount, d.splitType, d.participants);
+    const newTAmt = Math.min(d.treasuryAmount || 0, d.amount);
+    const oldTAmt = Number(existing.treasury_amount || 0);
+
+    await client.query('BEGIN');
+
+    // Treasury delta: refund whatever this expense took before, then deduct
+    // whatever the edited version should take — same net effect as
+    // recomputing from scratch, but keeps a clean audit trail of both moves.
+    if (oldTAmt > 0) {
+      await client.query(`UPDATE treasury SET balance=balance+$1, updated_at=now() WHERE squad_id=$2`, [oldTAmt, existing.squad_id]);
+      await client.query(
+        `INSERT INTO treasury_transactions (squad_id,type,amount,description,expense_id,user_id) VALUES ($1,'reversal',$2,$3,$4,$5)`,
+        [existing.squad_id, oldTAmt, `"${existing.title}" edit hone se treasury ko ₹${(oldTAmt/100).toFixed(0)} wapas mila 🔄`, id, req.user.id]
+      );
+    }
+    if (newTAmt > 0) {
+      const bal = Number((await client.query(`SELECT balance FROM treasury WHERE squad_id=$1`, [existing.squad_id])).rows[0]?.balance || 0);
+      if (bal < newTAmt) throw new ApiError(400, `Treasury mein sirf ₹${(bal/100).toFixed(0)} hai, ₹${(newTAmt/100).toFixed(0)} nahi 😅`);
+      await client.query(`UPDATE treasury SET balance=balance-$1, updated_at=now() WHERE squad_id=$2`, [newTAmt, existing.squad_id]);
+      await client.query(
+        `INSERT INTO treasury_transactions (squad_id,type,amount,description,expense_id,user_id) VALUES ($1,'expense',$2,$3,$4,$5)`,
+        [existing.squad_id, newTAmt, `Treasury ne edited "${d.title}" ke liye ₹${(newTAmt/100).toFixed(0)} diya 🏦`, id, req.user.id]
+      );
+    }
+
+    await client.query(
+      `UPDATE expenses SET title=$1, amount=$2, category=$3, notes=$4, paid_by=$5, split_type=$6,
+       expense_date=COALESCE($7::date, expense_date), treasury_amount=$8, trip_id=$9, updated_at=now() WHERE id=$10`,
+      [d.title, d.amount, d.category, d.notes, d.paidBy, d.splitType, d.expenseDate || null, newTAmt, d.tripId || null, id]
+    );
+
+    await client.query(`DELETE FROM expense_participants WHERE expense_id=$1`, [id]);
+    for (const s of shares) {
+      await client.query(
+        `INSERT INTO expense_participants (expense_id, user_id, share_amount, share_value) VALUES ($1,$2,$3,$4)`,
+        [id, s.userId, s.shareAmount, s.shareValue ?? null]
+      );
+    }
+
+    await client.query('COMMIT');
+
+    createNotificationForSquad({
+      squadId: existing.squad_id,
+      excludeUserId: req.user.id,
+      type: 'expense_edited',
+      message: `${req.user.name} ne "${d.title}" edit kiya ✏️`,
+      metadata: { expenseId: id, amount: d.amount },
+    });
+
+    res.json({ success: true });
+  } catch (err) { await client.query('ROLLBACK').catch(() => {}); next(err); }
+  finally { client.release(); }
 }
 
 export async function deleteExpense(req, res, next) {
