@@ -11,8 +11,6 @@
 // verifies.
 // ============================================================
 import multer from 'multer';
-import path from 'path';
-import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
@@ -21,6 +19,7 @@ import { ApiError } from '../middleware/errorHandler.js';
 import { issueOtp, verifyOtp } from '../services/otp.service.js';
 import { sendLoginNotification } from '../services/email.service.js';
 import { describeDevice, getClientIp } from '../utils/device.js';
+import { uploadToStorage } from '../services/storage.service.js';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name too short').max(50),
@@ -225,10 +224,7 @@ export async function updateProfile(req, res, next) {
   } catch (err) { next(err); }
 }
 
-const avatarStorage = multer.diskStorage({
-  destination: 'uploads/avatars/',
-  filename: (req, file, cb) => cb(null, crypto.randomBytes(12).toString('hex') + path.extname(file.originalname).toLowerCase()),
-});
+const avatarStorage = multer.memoryStorage();
 export const avatarUpload = multer({
   storage: avatarStorage,
   limits: { fileSize: 2 * 1024 * 1024 },
@@ -241,7 +237,7 @@ export const avatarUpload = multer({
 export async function uploadAvatar(req, res, next) {
   try {
     if (!req.file) throw new ApiError(400, 'Photo toh bhejo bhai 📸');
-    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    const avatarUrl = await uploadToStorage(req.file.buffer, 'avatars', req.file.originalname, req.file.mimetype);
     const { rows } = await query(`UPDATE users SET avatar_url=$1 WHERE id=$2 RETURNING *`, [avatarUrl, req.user.id]);
     res.json({ success: true, avatarUrl, user: publicUser(rows[0]) });
   } catch (err) { next(err); }

@@ -3,6 +3,37 @@ import { ApiError } from '../middleware/errorHandler.js';
 import { awardXp, unlockAchievement, XP } from '../services/xp.service.js';
 import { createNotification } from './notification.controller.js';
 
+// Lets someone who's owed money nudge the person who owes them — reuses
+// the existing notification+push pipeline, no new infrastructure needed.
+// No persistent cooldown tracking (kept intentionally simple); the button
+// itself has a short client-side disable window after tapping to avoid
+// accidental double-sends.
+export async function sendReminder(req, res, next) {
+  try {
+    const { squadId, toUser, amount } = req.body || {};
+    if (!squadId || !toUser) throw new ApiError(400, 'squadId and toUser required');
+    const me = (await query(
+      `SELECT 1 FROM squad_members WHERE squad_id=$1 AND user_id=$2 AND status='active'`,
+      [squadId, req.user.id]
+    )).rows[0];
+    if (!me) throw new ApiError(403, 'Not a member of this squad');
+    if (toUser === req.user.id) throw new ApiError(400, "Khud ko yaad dilane ki zaroorat nahi 😅");
+
+    const amt = Number(amount || 0);
+    createNotification({
+      userId: toUser,
+      squadId,
+      type: 'settlement_reminder',
+      message: amt > 0
+        ? `${req.user.name} ne tumhe ₹${(amt/100).toFixed(0)} yaad dilaya — pay kar do 😅`
+        : `${req.user.name} ne payment ka reminder bheja hai`,
+      metadata: { amount: amt },
+    });
+
+    res.json({ success: true });
+  } catch (err) { next(err); }
+}
+
 // Step 1: the PAYER says "I've paid" -> creates a PENDING settlement.
 // Balances do NOT change yet. The receiver must confirm.
 export async function createSettlement(req, res, next) {

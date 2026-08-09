@@ -4,6 +4,65 @@
 
 Social expense-tracking web app for friend squads — React + TypeScript + Tailwind v4 + Framer Motion frontend, Node/Express backend, PostgreSQL database.
 
+## 💾 v6.5 — persistent file storage (uploads no longer vanish)
+
+**The bug:** avatars and memory photos were stored on Render's local disk.
+Render's free tier filesystem is ephemeral — every redeploy or restart
+(which happens automatically after inactivity) silently wiped every
+uploaded photo and avatar since the last deploy. This had been true since
+the very first version and was never caught because it only shows up
+*after* a restart, not immediately after uploading.
+
+**The fix:** uploads now go to **Supabase Storage** — no new account
+needed, since this project already runs its database on Supabase. Multer
+switched from `diskStorage` to `memoryStorage`; the uploaded buffer goes
+straight to a Supabase bucket and the returned public URL (already
+absolute, `https://...supabase.co/...`) is stored in the database instead
+of a local relative path.
+
+**Zero frontend changes needed** — the `assetUrl()` helper from the
+Memories-photos fix (v6.3) already passes absolute URLs through unchanged,
+so this was a backend-only fix.
+
+**One-time setup required** (nothing works without this):
+1. Supabase dashboard → your project → Storage → **Create a new bucket**
+   named `squadpay-uploads`, and mark it **Public** (uploaded photos need
+   to be viewable without auth, same as any image host)
+2. Project Settings → API → **Project URL** → `SUPABASE_URL`
+3. Project Settings → API → **service_role key** (not the anon key — this
+   needs write access) → `SUPABASE_SERVICE_KEY`
+
+Without these two variables, avatar/photo uploads return a clear error —
+everything else in the app is unaffected.
+
+## 🆕 v6.4 — recurring expenses, reminders, search, statement export
+
+Four new features. (Also considered squad polls and receipt-scanning OCR —
+deliberately held off on those, since each needs a bigger new surface of
+its own rather than extending what's already there.)
+
+- **Recurring Expenses** — rent, WiFi, subscriptions. Set it once (amount,
+  category, who pays, day of month) and it auto-generates as a real expense
+  every month, split equally across whoever's active in the squad at the
+  time. No background cron (Render's free tier can't run one reliably) —
+  due items are generated lazily, the next time anyone opens the squad's
+  expenses. New `recurring_expenses` table, `/api/recurring/*` routes,
+  manage them from a card on the Overview tab.
+- **Reminder / Nudge** — "🔔 Yaad dilao" button in Settle, shown to whoever's
+  *owed* money in a suggestion. Sends the debtor a real notification+push.
+  Reuses the existing notification pipeline entirely — no new
+  infrastructure.
+- **Expense search & filter** — search bar + category dropdown on the
+  Expenses tab, debounced. Backend `listExpenses` now accepts `q`,
+  `category`, `payerId`, `from`, `to` query params, all optional/additive.
+- **Squad statement CSV export** — every expense + every completed
+  settlement, one CSV, from the `⋮` squad menu. Note: this needed an
+  authenticated fetch + blob download, not a plain link — a bare `<a href>`
+  to an authenticated API route can't carry the JWT and would 401.
+
+**Also confirmed already built, no work needed:** UPI deep-link "Pay via
+UPI" — was already wired into the Settle tab from an earlier round.
+
 ## 🚪 v6.3 — Leave Squad, Delete Squad, mobile overflow fixes, broken images fixed
 
 **Leave Squad** (new) — `POST /squads/:id/leave`. Blocked if you have a

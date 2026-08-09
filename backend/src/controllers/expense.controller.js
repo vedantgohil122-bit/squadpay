@@ -4,6 +4,7 @@ import { ApiError } from '../middleware/errorHandler.js';
 import { computeShares } from '../services/split.service.js';
 import { awardXp, unlockAchievement, XP } from '../services/xp.service.js';
 import { createNotificationForSquad } from './notification.controller.js';
+import { runDueRecurring } from './recurring.controller.js';
 
 const expenseSchema = z.object({
   treasuryAmount: z.number().int().min(0).optional().default(0),
@@ -87,6 +88,7 @@ export async function listExpenses(req, res, next) {
   try {
     const { squadId } = req.params;
     await assertMember(squadId, req.user.id);
+    await runDueRecurring(squadId).catch((e) => console.error('runDueRecurring:', e.message));
 
     // Pagination: caps the result set instead of loading every expense a
     // squad has ever logged. Defaults to 50/page — generous for normal use,
@@ -96,20 +98,34 @@ export async function listExpenses(req, res, next) {
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 50));
     const offset = (page - 1) * limit;
 
+    // Optional filters — all additive, none required. Category/payer are
+    // exact matches; q is a case-insensitive substring match on title/notes;
+    // from/to bound expense_date inclusively.
+    const { category, payerId, q, from, to } = req.query;
+    const where = [`e.squad_id = $1`, `e.is_deleted = FALSE`];
+    const params = [squadId];
+    let idx = 2;
+    if (category) { where.push(`e.category = $${idx++}`); params.push(category); }
+    if (payerId) { where.push(`e.paid_by = $${idx++}`); params.push(payerId); }
+    if (q) { where.push(`(e.title ILIKE $${idx} OR e.notes ILIKE $${idx})`); params.push(`%${q}%`); idx++; }
+    if (from) { where.push(`e.expense_date >= $${idx++}`); params.push(from); }
+    if (to) { where.push(`e.expense_date <= $${idx++}`); params.push(to); }
+    const whereSql = where.join(' AND ');
+
     const { rows } = await query(
       `SELECT e.*, u.name AS paid_by_name, u.avatar_url AS paid_by_avatar,
         (SELECT json_agg(json_build_object('userId', ep.user_id, 'name', pu.name, 'shareAmount', ep.share_amount))
          FROM expense_participants ep JOIN users pu ON pu.id = ep.user_id WHERE ep.expense_id = e.id) AS participants
        FROM expenses e JOIN users u ON u.id = e.paid_by
-       WHERE e.squad_id = $1 AND e.is_deleted = FALSE
+       WHERE ${whereSql}
        ORDER BY e.expense_date DESC, e.created_at DESC
-       LIMIT $2 OFFSET $3`,
-      [squadId, limit, offset]
+       LIMIT $${idx++} OFFSET $${idx++}`,
+      [...params, limit, offset]
     );
 
     const { rows: countRows } = await query(
-      `SELECT COUNT(*)::int AS total FROM expenses WHERE squad_id = $1 AND is_deleted = FALSE`,
-      [squadId]
+      `SELECT COUNT(*)::int AS total FROM expenses e WHERE ${whereSql}`,
+      params
     );
     const total = countRows[0].total;
 
@@ -118,6 +134,40 @@ export async function listExpenses(req, res, next) {
       expenses: rows,
       pagination: { page, limit, total, hasMore: offset + rows.length < total },
     });
+  } catch (err) { next(err); }
+}
+
+// Squad-wide statement: every expense plus every completed settlement, one
+// CSV — mirrors the same export pattern already used for Personal Finance.
+export async function exportSquadStatement(req, res, next) {
+  try {
+    const { squadId } = req.params;
+    await assertMember(squadId, req.user.id);
+
+    const expenses = (await query(
+      `SELECT e.expense_date, e.title, e.category, e.amount, u.name AS paid_by_name
+       FROM expenses e JOIN users u ON u.id = e.paid_by
+       WHERE e.squad_id=$1 AND e.is_deleted=FALSE ORDER BY e.expense_date`,
+      [squadId]
+    )).rows;
+    const settlements = (await query(
+      `SELECT s.created_at, fu.name AS from_name, tu.name AS to_name, s.amount, s.method
+       FROM settlements s JOIN users fu ON fu.id=s.from_user JOIN users tu ON tu.id=s.to_user
+       WHERE s.squad_id=$1 AND s.status='completed' ORDER BY s.created_at`,
+      [squadId]
+    )).rows;
+
+    const lines = ['Type,Date,Description,Amount,Detail'];
+    expenses.forEach((e) => lines.push(
+      `Expense,"${e.expense_date}","${e.title.replace(/"/g, '""')}",${(Number(e.amount)/100).toFixed(2)},"Paid by ${e.paid_by_name} (${e.category})"`
+    ));
+    settlements.forEach((s) => lines.push(
+      `Settlement,"${new Date(s.created_at).toISOString().slice(0,10)}","${s.from_name} paid ${s.to_name}",${(Number(s.amount)/100).toFixed(2)},"via ${s.method}"`
+    ));
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="squad-statement.csv"');
+    res.send(lines.join('\n'));
   } catch (err) { next(err); }
 }
 

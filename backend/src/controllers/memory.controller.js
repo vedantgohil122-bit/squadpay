@@ -1,15 +1,11 @@
-import path from 'path';
-import crypto from 'crypto';
 import multer from 'multer';
 import { query } from '../config/db.js';
 import { ApiError } from '../middleware/errorHandler.js';
 import { awardXp } from '../services/xp.service.js';
 import { createNotificationForSquad } from './notification.controller.js';
+import { uploadToStorage } from '../services/storage.service.js';
 
-const storage = multer.diskStorage({
-  destination: 'uploads/',
-  filename: (req, file, cb) => cb(null, crypto.randomBytes(12).toString('hex') + path.extname(file.originalname).toLowerCase()),
-});
+const storage = multer.memoryStorage();
 export const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
@@ -30,9 +26,10 @@ export async function createMemory(req, res, next) {
     if (!squadId) throw new ApiError(400, 'squadId required');
     if (!req.file) throw new ApiError(400, 'Photo toh bhejo bhai 📸');
     await assertMember(squadId, req.user.id);
+    const url = await uploadToStorage(req.file.buffer, 'memories', req.file.originalname, req.file.mimetype);
     const { rows } = await query(
       `INSERT INTO photos (squad_id, uploaded_by, url, caption) VALUES ($1,$2,$3,$4) RETURNING *`,
-      [squadId, req.user.id, `/uploads/${req.file.filename}`, (caption || '').slice(0, 200)]
+      [squadId, req.user.id, url, (caption || '').slice(0, 200)]
     );
     await awardXp(squadId, req.user.id, 'memory.uploaded', 15, { caption: caption || '' });
 

@@ -379,6 +379,29 @@ CREATE TABLE push_subscriptions (
 );
 
 -- ------------------------------------------------------------
+-- 23. RECURRING_EXPENSES — v6.4: rent, WiFi, subscriptions.
+-- day_of_month is capped at 28 to sidestep month-length edge cases
+-- (no "day 31" that skips every February). next_run_date is checked
+-- lazily (see recurring.controller.js runDueRecurring) rather than via
+-- a background cron — Render's free tier has no persistent worker, so
+-- due items are generated the next time the squad's expenses are
+-- viewed, not on a fixed schedule.
+-- ------------------------------------------------------------
+CREATE TABLE recurring_expenses (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  squad_id      UUID NOT NULL REFERENCES squads(id) ON DELETE CASCADE,
+  title         TEXT NOT NULL,
+  amount        BIGINT NOT NULL CHECK (amount > 0),   -- PAISE
+  category      TEXT NOT NULL DEFAULT 'other',
+  paid_by       UUID NOT NULL REFERENCES users(id),
+  day_of_month  INT NOT NULL CHECK (day_of_month BETWEEN 1 AND 28),
+  next_run_date DATE NOT NULL,
+  active        BOOLEAN NOT NULL DEFAULT TRUE,
+  created_by    UUID NOT NULL REFERENCES users(id),
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ------------------------------------------------------------
 -- INDEXES — the queries we will run thousands of times
 -- ------------------------------------------------------------
 CREATE INDEX idx_members_squad          ON squad_members (squad_id) WHERE status = 'active';
@@ -397,6 +420,7 @@ CREATE INDEX idx_contributions_squad    ON contributions (squad_id, created_at D
 CREATE INDEX idx_treasury_txns_squad    ON treasury_transactions (squad_id, created_at DESC);
 CREATE INDEX idx_personal_expenses_user ON personal_expenses (user_id, expense_date DESC);
 CREATE INDEX idx_push_subs_user         ON push_subscriptions (user_id);
+CREATE INDEX idx_recurring_due          ON recurring_expenses (squad_id) WHERE active = TRUE;
 -- Partial index matching the exact shape of the verify-OTP query: it always
 -- filters WHERE consumed_at IS NULL, so a partial index on just the unconsumed
 -- rows is both smaller and a more precise match than indexing everything.

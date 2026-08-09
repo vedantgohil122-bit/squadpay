@@ -1,7 +1,7 @@
 // One fetch wrapper for the whole app. Attaches the JWT,
 // unwraps { success, ... }, throws readable errors.
 const isProd = window.location.hostname !== 'localhost';
-const BASE = isProd ? 'https://squadpay-backend-z2er.onrender.com/api' : '/api';
+export const BASE = isProd ? 'https://squadpay-backend-z2er.onrender.com/api' : '/api';
 
 export class ApiException extends Error {
   status: number;

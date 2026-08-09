@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
-import { createSettlement, confirmSettlement, denySettlement, listSettlements } from '../controllers/settlement.controller.js';
+import { createSettlement, confirmSettlement, denySettlement, listSettlements, sendReminder } from '../controllers/settlement.controller.js';
 const r = Router();
 r.use(requireAuth);
 r.post('/', createSettlement);
+r.post('/remind', sendReminder);
 r.patch('/:id/confirm', confirmSettlement);
 r.patch('/:id/deny', denySettlement);
 r.get('/squad/:squadId', listSettlements);

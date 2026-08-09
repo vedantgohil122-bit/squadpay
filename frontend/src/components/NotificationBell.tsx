@@ -10,6 +10,7 @@ const TYPE_ICON: Record<string, string> = {
   expense_added: '🧾',
   settlement_pending: '💸',
   settlement_completed: '✅',
+  settlement_reminder: '🔔',
   member_joined: '👋',
   member_left: '👋',
   squad_deleted: '🗑️',

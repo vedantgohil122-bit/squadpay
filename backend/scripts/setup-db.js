@@ -126,6 +126,23 @@ async function runMigrations() {
   )`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_push_subs_user ON push_subscriptions (user_id)`);
   console.log('   • Push notifications ready 🔔');
+
+  // v6.4: recurring expenses
+  await pool.query(`CREATE TABLE IF NOT EXISTS recurring_expenses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    squad_id UUID NOT NULL REFERENCES squads(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    amount BIGINT NOT NULL CHECK (amount > 0),
+    category TEXT NOT NULL DEFAULT 'other',
+    paid_by UUID NOT NULL REFERENCES users(id),
+    day_of_month INT NOT NULL CHECK (day_of_month BETWEEN 1 AND 28),
+    next_run_date DATE NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_by UUID NOT NULL REFERENCES users(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_recurring_due ON recurring_expenses (squad_id) WHERE active = TRUE`);
+  console.log('   • Recurring expenses ready 🔁');
 }
 
 async function main() {

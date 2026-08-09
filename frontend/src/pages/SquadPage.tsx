@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Plus, Copy, Check, Receipt, Handshake, Users as UsersIcon,
          Activity, Trash2, ChevronDown, Clock, BadgeCheck, XCircle,
          Trophy, RefreshCw, Play, Camera, BarChart2, Download, MoreVertical, LogOut } from 'lucide-react';
-import { api } from '../lib/api';
+import { api, BASE } from '../lib/api';
 import { toRupees, toPaise, timeAgo } from '../lib/money';
 import { useAuth } from '../store/auth';
 import { Button, Input, Modal, ErrorText, Avatar, FunLoader, ConfettiBurst, Toast, MarqueeTape, SoundToggle } from '../components/ui';
@@ -57,6 +57,10 @@ export default function SquadPage() {
   const [deleteTypedName, setDeleteTypedName] = useState('');
   const [actionError, setActionError] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [expenseQuery, setExpenseQuery] = useState('');
+  const [expenseCategory, setExpenseCategory] = useState('');
+  const [filteredExpenses, setFilteredExpenses] = useState<Expense[] | null>(null);
+  const [filtering, setFiltering] = useState(false);
 
   const load = useCallback(async () => {
     const [d, e, s] = await Promise.all([
@@ -81,6 +85,25 @@ export default function SquadPage() {
       setHasMoreExpenses(!!e.pagination?.hasMore);
     } finally { setLoadingMoreExpenses(false); }
   };
+
+  // Search/filter — debounced so we're not firing a request per keystroke.
+  // No active filters -> null, and the Expenses tab just falls back to the
+  // already-loaded, paginated `expenses` list instead of a separate fetch.
+  useEffect(() => {
+    if (!expenseQuery && !expenseCategory) { setFilteredExpenses(null); return; }
+    const t = setTimeout(async () => {
+      setFiltering(true);
+      try {
+        const params = new URLSearchParams();
+        if (expenseQuery) params.set('q', expenseQuery);
+        if (expenseCategory) params.set('category', expenseCategory);
+        params.set('limit', '100');
+        const r = await api<{ expenses: Expense[] }>(`/expenses/squad/${id}?${params}`);
+        setFilteredExpenses(r.expenses);
+      } finally { setFiltering(false); }
+    }, 350);
+    return () => clearTimeout(t);
+  }, [expenseQuery, expenseCategory, id]);
 
   // Auto-refresh every 30s so payment confirmations appear without manual refresh
   useEffect(() => {
@@ -113,6 +136,20 @@ export default function SquadPage() {
       setActionError(e.message || 'Delete nahi ho paya');
       setActionLoading(false);
     }
+  };
+
+  const exportStatement = async () => {
+    try {
+      const token = localStorage.getItem('squadpay_token');
+      const res = await fetch(`${BASE}/expenses/squad/${id}/export`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) throw new Error('Export failed');
+      const csv = await res.text();
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `${squad.name.replace(/[^a-z0-9]/gi, '-')}-statement.csv`; a.click();
+      URL.revokeObjectURL(url);
+    } catch { setToast('Export nahi ho paya 😅'); }
   };
 
   if (!detail) return (
@@ -184,6 +221,11 @@ export default function SquadPage() {
                       className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-bold sm:hidden"
                       style={{ color:'#f5f0e8', borderBottom:'1px solid rgba(245,240,232,0.1)' }}>
                       <Copy className="h-4 w-4" /> Copy Invite Code
+                    </button>
+                    <button onClick={() => { exportStatement(); setShowMenu(false); }}
+                      className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-bold"
+                      style={{ color:'#f5f0e8', borderBottom:'1px solid rgba(245,240,232,0.1)' }}>
+                      <Download className="h-4 w-4" /> Export Statement (CSV)
                     </button>
                     <button onClick={() => { setShowMenu(false); setActionError(''); setConfirmLeave(true); }}
                       className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-bold"
@@ -269,8 +311,29 @@ export default function SquadPage() {
       <div className="mx-auto mt-5 max-w-5xl px-4 sm:px-6">
         <AnimatePresence mode="wait">
           <motion.div key={tab} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0}} transition={{duration:0.15}}>
-            {tab==='overview'  && <Overview activity={activity} balances={balances} expenses={expenses} onMemberClick={setProfileUserId} squadId={squad.id} />}
-            {tab==='expenses'  && <ExpenseList expenses={expenses} meId={user?.id} onChanged={load} onAdd={() => setShowAdd(true)} hasMore={hasMoreExpenses} loadingMore={loadingMoreExpenses} onLoadMore={loadMoreExpenses} />}
+            {tab==='overview'  && (
+              <div>
+                <Overview activity={activity} balances={balances} expenses={expenses} onMemberClick={setProfileUserId} squadId={squad.id} />
+                <RecurringSection squadId={squad.id} members={members} />
+              </div>
+            )}
+            {tab==='expenses'  && (
+              <div>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <input value={expenseQuery} onChange={(e) => setExpenseQuery(e.target.value)}
+                    placeholder="🔍 Kharcha dhundo..." className="binput flex-1 min-w-[160px] text-sm" />
+                  <select value={expenseCategory} onChange={(e) => setExpenseCategory(e.target.value)} className="binput text-sm" style={{ width:'auto' }}>
+                    <option value="">Sab categories</option>
+                    {Object.entries(CE).map(([cat, emoji]) => <option key={cat} value={cat}>{emoji} {cat}</option>)}
+                  </select>
+                </div>
+                <ExpenseList expenses={filteredExpenses ?? expenses} meId={user?.id} onChanged={load}
+                  onAdd={() => setShowAdd(true)}
+                  hasMore={filteredExpenses ? false : hasMoreExpenses}
+                  loadingMore={filtering || loadingMoreExpenses}
+                  onLoadMore={filteredExpenses ? undefined : loadMoreExpenses} />
+              </div>
+            )}
             {tab==='settle'    && (
               <div>
                 <div className="flex justify-end mb-3">
@@ -483,16 +546,107 @@ function ExpenseList({ expenses, meId, onChanged, onAdd, hasMore, loadingMore, o
   );
 }
 
+/* ─── RECURRING EXPENSES ─── */
+interface RecurringItem {
+  id: string; title: string; amount: number; category: string;
+  paid_by: string; paid_by_name: string; day_of_month: number; active: boolean; next_run_date: string;
+}
+function RecurringSection({ squadId, members }: { squadId: string; members: Member[] }) {
+  const [items, setItems] = useState<RecurringItem[]>([]);
+  const [showAdd, setShowAdd] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({ title: '', amount: '', category: 'other', paidBy: '', dayOfMonth: '1' });
+  const [err, setErr] = useState('');
+
+  const load = () => api<{ recurring: RecurringItem[] }>(`/recurring/squad/${squadId}`).then((d) => setItems(d.recurring)).catch(() => {});
+  useEffect(() => { load(); }, [squadId]);
+
+  const submit = async () => {
+    setErr('');
+    const amt = Math.round(parseFloat(form.amount) * 100);
+    if (!form.title.trim() || !amt || amt <= 0 || !form.paidBy) { setErr('Sab fields bharo'); return; }
+    setLoading(true);
+    try {
+      await api('/recurring', { method: 'POST', body: JSON.stringify({ squadId, title: form.title, amount: amt, category: form.category, paidBy: form.paidBy, dayOfMonth: parseInt(form.dayOfMonth, 10) }) });
+      setShowAdd(false); setForm({ title: '', amount: '', category: 'other', paidBy: '', dayOfMonth: '1' });
+      load();
+    } catch (e: any) { setErr(e.message || 'Add nahi hua'); }
+    finally { setLoading(false); }
+  };
+
+  const toggle = async (id: string) => { await api(`/recurring/${id}/toggle`, { method: 'PATCH' }); load(); };
+  const remove = async (id: string) => { if (!confirm('Ye recurring expense hatana hai?')) return; await api(`/recurring/${id}`, { method: 'DELETE' }); load(); };
+
+  return (
+    <div className="mt-5">
+      <div className="flex items-center justify-between mb-2">
+        <p className="sticker">🔁 Recurring Kharche</p>
+        <button onClick={() => setShowAdd(true)} className="bbtn bbtn-ghost gap-1.5 px-3 py-1.5 text-xs"><Plus className="h-3.5 w-3.5" /> Add</button>
+      </div>
+      {items.length === 0 ? (
+        <p className="text-xs" style={{ color: 'rgba(245,240,232,0.4)' }}>Rent, WiFi, subscriptions — jo har mahine aata hai, wo yaha daal do. Auto-add ho jayega.</p>
+      ) : (
+        <div className="space-y-2">
+          {items.map((r) => (
+            <div key={r.id} className="bcard flex items-center gap-3 p-3" style={r.active ? undefined : { opacity: 0.5 }}>
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg" style={{ background: 'rgba(245,240,232,0.1)' }}>{CE[r.category]}</div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold" style={{ color: '#f5f0e8' }}>{r.title}</p>
+                <p className="text-[11px]" style={{ color: 'rgba(245,240,232,0.5)' }}>Har mahine {r.day_of_month} tareek ko · {r.paid_by_name.split(' ')[0]} pays</p>
+              </div>
+              <p className="font-display font-bold text-sm" style={{ color: '#f5a623' }}>{toRupees(Number(r.amount))}</p>
+              <button onClick={() => toggle(r.id)} title={r.active ? 'Pause' : 'Resume'} className="rounded-lg p-1.5" style={{ color: 'rgba(245,240,232,0.5)' }}>
+                {r.active ? '⏸️' : '▶️'}
+              </button>
+              <button onClick={() => remove(r.id)} className="rounded-lg p-1.5" style={{ color: '#ff3d6e' }}><Trash2 className="h-3.5 w-3.5" /></button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Modal open={showAdd} onClose={() => { setShowAdd(false); setErr(''); }} title="Recurring kharcha add karo 🔁">
+        <div className="space-y-3">
+          <Input label="Title" placeholder="e.g. Rent, WiFi" value={form.title} onChange={(e:any) => setForm({ ...form, title: e.target.value })} />
+          <Input label="Amount (₹)" placeholder="1500" type="number" value={form.amount} onChange={(e:any) => setForm({ ...form, amount: e.target.value })} />
+          <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="binput">
+            {Object.entries(CE).map(([cat, emoji]) => <option key={cat} value={cat}>{emoji} {cat}</option>)}
+          </select>
+          <select value={form.paidBy} onChange={(e) => setForm({ ...form, paidBy: e.target.value })} className="binput">
+            <option value="">Kaun pay karta hai?</option>
+            {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
+          <select value={form.dayOfMonth} onChange={(e) => setForm({ ...form, dayOfMonth: e.target.value })} className="binput">
+            {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>Har mahine {d} tareek</option>)}
+          </select>
+          <ErrorText msg={err} />
+          <Button onClick={submit} disabled={loading} className="w-full justify-center">{loading ? 'Adding...' : 'Add Karo'}</Button>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
 /* ─── SETTLE ─── */
 function Settle({ suggestions, pending, history, squadId, members, meId, onAction, onConfirmed }: {
   suggestions:Suggestion[]; pending:Pending[]; history:Settlement[]; squadId:string; members:Member[]; meId?:string; onAction:()=>void; onConfirmed:()=>void;
 }) {
   const [busy, setBusy] = useState<string|null>(null);
   const [choosing, setChoosing] = useState<Suggestion|null>(null);
+  const [reminded, setReminded] = useState<Record<string, number>>({});
   const nagLine = useMemo(() => pick(LINES.pending), [suggestions.length]);
   const incoming = pending.filter((p) => p.to_user===meId);
   const outgoing = pending.filter((p) => p.from_user===meId);
   const hasPending = (s:Suggestion) => pending.some((p) => p.from_user===s.from.userId && p.to_user===s.to.userId);
+
+  const remind = async (s: Suggestion) => {
+    const key = `${s.from.userId}-${s.to.userId}`;
+    setReminded((r) => ({ ...r, [key]: Date.now() }));
+    try {
+      await api('/settlements/remind', { method: 'POST', body: JSON.stringify({ squadId, toUser: s.from.userId, amount: s.amount }) });
+      play('tap');
+    } catch { /* button already shows "sent" state client-side either way */ }
+  };
+  const REMIND_COOLDOWN_MS = 5 * 60 * 1000; // avoid accidental double-nudges in the same sitting
 
   const claim = async (s:Suggestion, method:string) => {
     setBusy(`c-${s.to.userId}`);
@@ -585,6 +739,16 @@ function Settle({ suggestions, pending, history, squadId, members, meId, onActio
                         <Button onClick={() => setChoosing(s)} disabled={busy===`c-${s.to.userId}`}>I've paid 💸</Button>
                       </div>
                   )}
+                  {s.to.userId===meId && s.from.userId!==meId && !hasPending(s) && (() => {
+                    const key = `${s.from.userId}-${s.to.userId}`;
+                    const justReminded = !!reminded[key] && Date.now() - reminded[key] < REMIND_COOLDOWN_MS;
+                    return (
+                      <button onClick={() => remind(s)} disabled={justReminded}
+                        className="bbtn bbtn-ghost gap-1.5 px-3 py-2 text-xs" style={justReminded ? { opacity: 0.5 } : undefined}>
+                        {justReminded ? '✓ Reminder bheja' : '🔔 Yaad dilao'}
+                      </button>
+                    );
+                  })()}
                 </div>
               );
             })}
