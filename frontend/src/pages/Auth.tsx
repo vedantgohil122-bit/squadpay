@@ -37,10 +37,10 @@ function getStrength(p: string): { score: number; label: string; color: string }
   if (/[A-Z]/.test(p)) score++;
   if (/[0-9]/.test(p)) score++;
   if (/[^A-Za-z0-9]/.test(p)) score++;
-  if (score <= 1) return { score, label: 'Bahut weak 😬', color: '#ff3d6e' };
-  if (score <= 2) return { score, label: 'Thoda theek 🤔', color: '#f5a623' };
-  if (score <= 3) return { score, label: 'Acha hai 👍', color: '#f5a623' };
-  return { score, label: 'Strong! 💪', color: '#b8f02a' };
+  if (score <= 1) return { score, label: 'Bahut weak 😬', color: 'var(--color-hot-pink)' };
+  if (score <= 2) return { score, label: 'Thoda theek 🤔', color: 'var(--color-marigold)' };
+  if (score <= 3) return { score, label: 'Acha hai 👍', color: 'var(--color-marigold)' };
+  return { score, label: 'Strong! 💪', color: 'var(--color-lime)' };
 }
 
 // ── FIELD COMPONENT ─────────────────────────────────────────
@@ -61,7 +61,7 @@ function Field({ label, type = 'text', value, onChange, onBlur, error, touched, 
 
   return (
     <div className="space-y-1.5">
-      <label className="block text-xs font-extrabold uppercase tracking-wider" style={{ color: 'rgba(245,240,232,0.6)' }}>
+      <label className="block text-xs font-extrabold uppercase tracking-wider" style={{ color: 'rgba(var(--rt-bone-rgb),0.6)' }}>
         {label}
       </label>
       <div className="relative">
@@ -73,33 +73,33 @@ function Field({ label, type = 'text', value, onChange, onBlur, error, touched, 
           onBlur={onBlur}
           className="w-full rounded-xl px-4 py-3 pr-10 text-sm font-medium outline-none transition"
           style={{
-            background: '#1a1612',
-            border: `2px solid ${hasError ? '#ff3d6e' : isValid ? '#b8f02a' : 'rgba(245,240,232,0.15)'}`,
-            color: '#f5f0e8',
+            background: 'var(--color-ink-900)',
+            border: `2px solid ${hasError ? 'var(--color-hot-pink)' : isValid ? 'var(--color-lime)' : 'rgba(var(--rt-bone-rgb),0.15)'}`,
+            color: 'var(--color-bone)',
             boxShadow: hasError ? '0 0 0 3px rgba(255,61,110,0.1)' : isValid ? '0 0 0 3px rgba(184,240,42,0.1)' : 'none',
           }}
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
           {isPassword && (
             <button type="button" onClick={() => setShow(!show)}
-              style={{ color: 'rgba(245,240,232,0.4)', cursor: 'pointer', background: 'none', border: 'none', padding: '2px' }}>
+              style={{ color: 'rgba(var(--rt-bone-rgb),0.4)', cursor: 'pointer', background: 'none', border: 'none', padding: '2px' }}>
               {show ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           )}
-          {!isPassword && isValid && <CheckCircle2 size={16} color="#b8f02a" />}
-          {!isPassword && hasError && <XCircle size={16} color="#ff3d6e" />}
+          {!isPassword && isValid && <CheckCircle2 size={16} color="var(--color-lime)" />}
+          {!isPassword && hasError && <XCircle size={16} color="var(--color-hot-pink)" />}
         </div>
       </div>
       {children}
       {hasError && (
         <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#ff3d6e' }}>
+          className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: 'var(--color-hot-pink)' }}>
           <AlertCircle size={12} /> {error}
         </motion.p>
       )}
       {isValid && !hasError && (
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#b8f02a' }}>
+          className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: 'var(--color-lime)' }}>
           <CheckCircle2 size={12} /> Sahi hai ✓
         </motion.p>
       )}
@@ -221,7 +221,7 @@ function AuthCard({ mode }: { mode: 'login' | 'register' }) {
   const openForgotPassword = () => { setResetEmail(form.email); setResetError(''); setResetDone(false); setScreen('forgot-request'); };
 
   return (
-    <main className="flex min-h-screen flex-col" style={{ background: '#0e0c0a' }}>
+    <main className="flex min-h-screen flex-col" style={{ background: 'var(--color-ink-950)' }}>
       <MarqueeTape />
       <div className="flex flex-1 items-center justify-center px-5 py-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
@@ -230,16 +230,16 @@ function AuthCard({ mode }: { mode: 'login' | 'register' }) {
             <img src="/favicon.png" alt="SquadPay" className="h-10 w-auto" />
           </Link>
 
-          <div className="rounded-2xl p-7" style={{ background: '#161310', border: '2px solid #f5a623', boxShadow: '4px 4px 0 rgba(245,166,35,0.3)' }}>
+          <div className="rounded-2xl p-7" style={{ background: 'var(--color-ink-900)', border: '2px solid #f5a623', boxShadow: '4px 4px 0 rgba(245,166,35,0.3)' }}>
             <AnimatePresence mode="wait">
 
               {/* ── SCREEN: CREDENTIALS ── */}
               {screen === 'credentials' && (
                 <motion.div key="credentials" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  <h1 className="font-display text-xl font-extrabold" style={{ color: '#f5f0e8' }}>
+                  <h1 className="font-display text-xl font-extrabold" style={{ color: 'var(--color-bone)' }}>
                     {mode === 'login' ? 'Log In' : 'Squad mein aao! 🎉'}
                   </h1>
-                  <p className="mt-1 text-xs" style={{ color: 'rgba(245,240,232,0.5)' }}>
+                  <p className="mt-1 text-xs" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>
                     {mode === 'login' ? 'Squad tumhara intezaar kar rahi hai.' : 'Email OTP se secure — 30 second mein hisaab shuru.'}
                   </p>
 
@@ -267,7 +267,7 @@ function AuthCard({ mode }: { mode: 'login' | 'register' }) {
                           <div className="flex gap-1 mb-1">
                             {[1, 2, 3, 4, 5].map((i) => (
                               <div key={i} className="flex-1 h-1 rounded-full transition-all duration-300"
-                                style={{ background: i <= strength.score ? strength.color : 'rgba(245,240,232,0.1)' }} />
+                                style={{ background: i <= strength.score ? strength.color : 'rgba(var(--rt-bone-rgb),0.1)' }} />
                             ))}
                           </div>
                           <p className="text-[11px] font-semibold" style={{ color: strength.color }}>{strength.label}</p>
@@ -286,16 +286,16 @@ function AuthCard({ mode }: { mode: 'login' | 'register' }) {
                       <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
                         className="flex items-start gap-2 rounded-xl px-4 py-3"
                         style={{ background: 'rgba(255,61,110,0.1)', border: '2px solid rgba(255,61,110,0.3)' }}>
-                        <AlertCircle size={16} color="#ff3d6e" className="shrink-0 mt-0.5" />
-                        <p className="text-xs font-semibold" style={{ color: '#ff3d6e' }}>{serverError}</p>
+                        <AlertCircle size={16} color="var(--color-hot-pink)" className="shrink-0 mt-0.5" />
+                        <p className="text-xs font-semibold" style={{ color: 'var(--color-hot-pink)' }}>{serverError}</p>
                       </motion.div>
                     )}
 
                     <button type="submit" disabled={busy}
                       className="w-full rounded-xl py-3.5 font-display font-extrabold text-sm transition active:scale-[0.98] disabled:opacity-60"
                       style={{
-                        background: isValid ? '#f5a623' : 'rgba(245,166,35,0.3)',
-                        color: isValid ? '#0e0c0a' : 'rgba(245,240,232,0.4)',
+                        background: isValid ? 'var(--color-marigold)' : 'rgba(245,166,35,0.3)',
+                        color: isValid ? 'var(--color-ink-950)' : 'rgba(var(--rt-bone-rgb),0.4)',
                         border: '2px solid rgba(0,0,0,0.2)',
                         cursor: isValid ? 'pointer' : 'not-allowed',
                       }}>
@@ -303,25 +303,25 @@ function AuthCard({ mode }: { mode: 'login' | 'register' }) {
                     </button>
 
                     {mode === 'register' && (
-                      <div className="rounded-xl px-3 py-2.5" style={{ background: 'rgba(245,240,232,0.04)', border: '1px solid rgba(245,240,232,0.08)' }}>
-                        <p className="text-[11px] font-bold mb-1.5" style={{ color: 'rgba(245,240,232,0.5)' }}>Password mein hona chahiye:</p>
+                      <div className="rounded-xl px-3 py-2.5" style={{ background: 'rgba(var(--rt-bone-rgb),0.04)', border: '1px solid rgba(var(--rt-bone-rgb),0.08)' }}>
+                        <p className="text-[11px] font-bold mb-1.5" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>Password mein hona chahiye:</p>
                         {[
                           { rule: form.password.length >= 8, text: 'Min 8 characters' },
                           { rule: /[A-Z]/.test(form.password) || /[0-9]/.test(form.password), text: 'Ek number ya capital letter' },
                         ].map(({ rule, text }) => (
                           <div key={text} className="flex items-center gap-1.5 text-[11px] mb-0.5">
-                            {rule ? <CheckCircle2 size={11} color="#b8f02a" /> : <XCircle size={11} color="rgba(245,240,232,0.2)" />}
-                            <span style={{ color: rule ? '#b8f02a' : 'rgba(245,240,232,0.3)' }}>{text}</span>
+                            {rule ? <CheckCircle2 size={11} color="var(--color-lime)" /> : <XCircle size={11} color="rgba(var(--rt-bone-rgb),0.2)" />}
+                            <span style={{ color: rule ? 'var(--color-lime)' : 'rgba(var(--rt-bone-rgb),0.3)' }}>{text}</span>
                           </div>
                         ))}
                       </div>
                     )}
                   </form>
 
-                  <p className="mt-5 text-center text-xs" style={{ color: 'rgba(245,240,232,0.4)' }}>
+                  <p className="mt-5 text-center text-xs" style={{ color: 'rgba(var(--rt-bone-rgb),0.4)' }}>
                     {mode === 'login'
-                      ? <> Naya hu? <Link to="/register" style={{ color: '#f5a623', fontWeight: 700 }}>Account banao</Link></>
-                      : <> Pehle se ho? <Link to="/login" style={{ color: '#f5a623', fontWeight: 700 }}>Login karo</Link></>}
+                      ? <> Naya hu? <Link to="/register" style={{ color: 'var(--color-marigold)', fontWeight: 700 }}>Account banao</Link></>
+                      : <> Pehle se ho? <Link to="/login" style={{ color: 'var(--color-marigold)', fontWeight: 700 }}>Login karo</Link></>}
                   </p>
                 </motion.div>
               )}
@@ -341,19 +341,19 @@ function AuthCard({ mode }: { mode: 'login' | 'register' }) {
               {/* ── SCREEN: FORGOT PASSWORD — step 1, request code ── */}
               {screen === 'forgot-request' && (
                 <motion.div key="forgot-request" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                  <button onClick={backToCredentials} className="mb-4 text-xs font-bold" style={{ color: 'rgba(245,240,232,0.5)' }}>
+                  <button onClick={backToCredentials} className="mb-4 text-xs font-bold" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>
                     ← Back
                   </button>
-                  <h2 className="font-display text-lg font-extrabold" style={{ color: '#f5f0e8' }}>Password reset karo 🔒</h2>
-                  <p className="mt-1 text-xs mb-5" style={{ color: 'rgba(245,240,232,0.5)' }}>Apna email daalo, code bhej denge.</p>
+                  <h2 className="font-display text-lg font-extrabold" style={{ color: 'var(--color-bone)' }}>Password reset karo 🔒</h2>
+                  <p className="mt-1 text-xs mb-5" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>Apna email daalo, code bhej denge.</p>
                   <form onSubmit={requestReset} className="space-y-4">
                     <Field label="Email" type="email" value={resetEmail} placeholder="tum@gmail.com"
                       error={!resetEmail ? '' : validators.email(resetEmail)} touched={!!resetEmail}
                       onChange={setResetEmail} onBlur={() => {}} />
-                    {resetError && <p className="text-xs font-semibold" style={{ color: '#ff3d6e' }}>{resetError}</p>}
+                    {resetError && <p className="text-xs font-semibold" style={{ color: 'var(--color-hot-pink)' }}>{resetError}</p>}
                     <button type="submit" disabled={resetBusy}
                       className="w-full rounded-xl py-3.5 font-display font-extrabold text-sm transition active:scale-[0.98] disabled:opacity-60"
-                      style={{ background: '#f5a623', color: '#0e0c0a', border: '2px solid rgba(0,0,0,0.2)' }}>
+                      style={{ background: 'var(--color-marigold)', color: 'var(--color-ink-950)', border: '2px solid rgba(0,0,0,0.2)' }}>
                       {resetBusy ? 'Bhej rahe hain...' : 'Reset code bhejo →'}
                     </button>
                   </form>
@@ -378,19 +378,19 @@ function AuthCard({ mode }: { mode: 'login' | 'register' }) {
                 <motion.div key="forgot-newpass" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                   {!resetDone ? (
                     <>
-                      <button onClick={() => setScreen('forgot-otp')} className="mb-4 text-xs font-bold" style={{ color: 'rgba(245,240,232,0.5)' }}>
+                      <button onClick={() => setScreen('forgot-otp')} className="mb-4 text-xs font-bold" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>
                         ← Back
                       </button>
-                      <h2 className="font-display text-lg font-extrabold" style={{ color: '#f5f0e8' }}>Naya password banao 🔑</h2>
-                      <p className="mt-1 text-xs mb-5" style={{ color: 'rgba(245,240,232,0.5)' }}>Code verify ho gaya — ab naya password set karo.</p>
+                      <h2 className="font-display text-lg font-extrabold" style={{ color: 'var(--color-bone)' }}>Naya password banao 🔑</h2>
+                      <p className="mt-1 text-xs mb-5" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>Code verify ho gaya — ab naya password set karo.</p>
                       <form onSubmit={submitNewPassword} className="space-y-4">
                         <Field label="Naya Password" type="password" value={newPassword} placeholder="Min 8 characters"
                           error={!newPassword ? '' : validators.password(newPassword)} touched={!!newPassword}
                           onChange={setNewPassword} onBlur={() => {}} />
-                        {resetError && <p className="text-xs font-semibold" style={{ color: '#ff3d6e' }}>{resetError}</p>}
+                        {resetError && <p className="text-xs font-semibold" style={{ color: 'var(--color-hot-pink)' }}>{resetError}</p>}
                         <button type="submit" disabled={resetBusy}
                           className="w-full rounded-xl py-3.5 font-display font-extrabold text-sm transition active:scale-[0.98] disabled:opacity-60"
-                          style={{ background: '#f5a623', color: '#0e0c0a', border: '2px solid rgba(0,0,0,0.2)' }}>
+                          style={{ background: 'var(--color-marigold)', color: 'var(--color-ink-950)', border: '2px solid rgba(0,0,0,0.2)' }}>
                           {resetBusy ? 'Set ho raha hai...' : 'Password set karo →'}
                         </button>
                       </form>
@@ -398,11 +398,11 @@ function AuthCard({ mode }: { mode: 'login' | 'register' }) {
                   ) : (
                     <div className="text-center py-4">
                       <p className="text-3xl mb-3">✅</p>
-                      <h2 className="font-display text-lg font-extrabold mb-1" style={{ color: '#f5f0e8' }}>Password reset ho gaya!</h2>
-                      <p className="text-xs mb-5" style={{ color: 'rgba(245,240,232,0.5)' }}>Naye password se login karo.</p>
+                      <h2 className="font-display text-lg font-extrabold mb-1" style={{ color: 'var(--color-bone)' }}>Password reset ho gaya!</h2>
+                      <p className="text-xs mb-5" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>Naye password se login karo.</p>
                       <button onClick={backToCredentials}
                         className="w-full rounded-xl py-3.5 font-display font-extrabold text-sm transition active:scale-[0.98]"
-                        style={{ background: '#f5a623', color: '#0e0c0a', border: '2px solid rgba(0,0,0,0.2)' }}>
+                        style={{ background: 'var(--color-marigold)', color: 'var(--color-ink-950)', border: '2px solid rgba(0,0,0,0.2)' }}>
                         Login karo →
                       </button>
                     </div>

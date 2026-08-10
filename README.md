@@ -35,6 +35,40 @@ so this was a backend-only fix.
 Without these two variables, avatar/photo uploads return a clear error —
 everything else in the app is unaffected.
 
+## 🌗 v6.6 — dark / light mode
+
+**Important context on how this was built:** the `arena` branch this was
+requested from isn't actually a "dark mode branch" — it's a large
+divergent fork (54 files, ~1800 lines) that evolved its own independent
+notifications, push, and offline systems, on top of an old snapshot with
+none of v6.0–v6.5's work in it. Merging it wholesale would have silently
+wiped out Leave/Delete Squad, recurring expenses, expense editing, and
+every bug fix since. Instead, only the theme-specific pieces were
+extracted (`ThemeToggle.tsx`, `store/theme.ts`, the CSS variable
+structure) and rebuilt cleanly against the current codebase.
+
+**How it actually works:** the app's entire color system was already
+built on CSS custom properties feeding into Tailwind v4's `@theme` block
+(`--color-bone`, `--color-ink-900`, etc.) — so every existing Tailwind
+class (`text-bone/50`, `bg-ink-900`) and every `.bcard`/`.bbtn`/`.binput`
+rule automatically became theme-aware just by making those underlying
+variables swap based on a `data-theme` attribute on `<html>`. No component
+using those classes needed to change at all.
+
+The real work was the **558 places across 17 files** using raw hardcoded
+hex colors (`style={{ color: '#f5f0e8' }}`) that bypassed the variable
+system entirely — those don't respond to anything. All were swapped for
+the equivalent `var(--color-*)` reference. A handful of genuinely
+decorative one-off colors (BakraWheel's spinning-wheel segment colors,
+a couple of PersonalFinance chart accents) were deliberately left static
+— they're vivid accent colors on small chart/wheel elements, not text or
+backgrounds, and read fine unchanged in both themes.
+
+Toggle (🌙/☀️) is in the header on Landing, Dashboard, and every Squad
+page. Choice persists via `localStorage`; first-time visitors get their
+OS preference; the toggle transitions smoothly (`transition: background-
+color 0.2s, color 0.2s` on body/cards/inputs) instead of an abrupt flash.
+
 ## ✏️ v6.5 — expense editing
 
 Expenses could only be created or deleted before — no way to fix a typo in

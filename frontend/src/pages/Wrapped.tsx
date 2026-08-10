@@ -97,9 +97,9 @@ export default function Wrapped() {
   }, [w, aiCaptions]);
 
   if (!w || generatingCaptions) return (
-    <main className="fixed inset-0 flex flex-col items-center justify-center gap-3" style={{ background:'#0e0c0a' }}>
+    <main className="fixed inset-0 flex flex-col items-center justify-center gap-3" style={{ background:'var(--color-ink-950)' }}>
       <FunLoader />
-      {generatingCaptions && <p className="text-xs" style={{ color:'rgba(245,240,232,0.4)' }}>AI captions generate ho rahe hain...</p>}
+      {generatingCaptions && <p className="text-xs" style={{ color:'rgba(var(--rt-bone-rgb),0.4)' }}>AI captions generate ho rahe hain...</p>}
     </main>
   );
 
@@ -153,7 +153,7 @@ export default function Wrapped() {
           {isLast ? (
             <Link to={`/app/squad/${id}`} onClick={(e) => e.stopPropagation()}
               className="mt-10 rounded-2xl px-8 py-3.5 font-display font-extrabold shadow-2xl transition active:scale-95"
-              style={{ background:'white', color:'#0e0c0a' }}>
+              style={{ background:'white', color:'var(--color-ink-950)' }}>
               Back to Squad
             </Link>
           ) : (

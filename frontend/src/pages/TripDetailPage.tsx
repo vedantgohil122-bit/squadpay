@@ -73,38 +73,38 @@ export default function TripDetailPage() {
   };
 
   if (!data) return (
-    <main className="flex min-h-screen flex-col" style={{ background:'#0e0c0a' }}>
+    <main className="flex min-h-screen flex-col" style={{ background:'var(--color-ink-950)' }}>
       <MarqueeTape /><div className="flex flex-1 items-center justify-center"><FunLoader /></div>
     </main>
   );
 
   const { trip, expenses, photos, balances, leaderboard } = data;
-  const budgetColor = trip.budgetUsedPct === null ? '#00d4c8' : trip.budgetUsedPct > 100 ? '#ff3d6e' : trip.budgetUsedPct > 80 ? '#f5a623' : '#b8f02a';
+  const budgetColor = trip.budgetUsedPct === null ? 'var(--color-aqua)' : trip.budgetUsedPct > 100 ? 'var(--color-hot-pink)' : trip.budgetUsedPct > 80 ? 'var(--color-marigold)' : 'var(--color-lime)';
 
   return (
-    <main className="min-h-screen pb-28" style={{ background:'#0e0c0a' }}>
+    <main className="min-h-screen pb-28" style={{ background:'var(--color-ink-950)' }}>
       <MarqueeTape />
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5 relative">
-        <button onClick={() => nav(`/app/squad/${id}/trips`)} className="flex items-center gap-2 text-sm font-bold" style={{ color:'rgba(245,240,232,0.6)' }}>
+        <button onClick={() => nav(`/app/squad/${id}/trips`)} className="flex items-center gap-2 text-sm font-bold" style={{ color:'rgba(var(--rt-bone-rgb),0.6)' }}>
           <ArrowLeft className="h-4 w-4" /> Trips
         </button>
-        <button onClick={() => setShowMenu(!showMenu)} className="rounded-lg p-2" style={{ color:'rgba(245,240,232,0.5)' }}>
+        <button onClick={() => setShowMenu(!showMenu)} className="rounded-lg p-2" style={{ color:'rgba(var(--rt-bone-rgb),0.5)' }}>
           <MoreVertical className="h-5 w-5" />
         </button>
         <AnimatePresence>
           {showMenu && (
             <motion.div initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
-              className="absolute right-5 top-14 z-30 w-48 rounded-2xl p-2" style={{ background:'#1a1612', border:'2px solid rgba(245,240,232,0.15)' }}>
-              <button onClick={() => { setShowMenu(false); openTagModal(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition hover:bg-white/5" style={{ color:'#00d4c8' }}>
+              className="absolute right-5 top-14 z-30 w-48 rounded-2xl p-2" style={{ background:'var(--color-ink-900)', border:'2px solid rgba(var(--rt-bone-rgb),0.15)' }}>
+              <button onClick={() => { setShowMenu(false); openTagModal(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition hover:bg-white/5" style={{ color:'var(--color-aqua)' }}>
                 <Tag className="h-4 w-4" /> Tag Old Expenses
               </button>
-              <button onClick={() => setStatus('completed')} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition hover:bg-white/5" style={{ color:'#b8f02a' }}>
+              <button onClick={() => setStatus('completed')} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition hover:bg-white/5" style={{ color:'var(--color-lime)' }}>
                 <CheckCircle2 className="h-4 w-4" /> Mark Completed
               </button>
-              <button onClick={() => setStatus('archived')} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition hover:bg-white/5" style={{ color:'#f5a623' }}>
+              <button onClick={() => setStatus('archived')} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition hover:bg-white/5" style={{ color:'var(--color-marigold)' }}>
                 <Archive className="h-4 w-4" /> Archive
               </button>
-              <button onClick={remove} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition hover:bg-white/5" style={{ color:'#ff3d6e' }}>
+              <button onClick={remove} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition hover:bg-white/5" style={{ color:'var(--color-hot-pink)' }}>
                 <Trash2 className="h-4 w-4" /> Delete Trip
               </button>
             </motion.div>
@@ -116,39 +116,39 @@ export default function TripDetailPage() {
         <div className="flex items-center gap-3">
           <span className="text-4xl">{trip.emoji}</span>
           <div>
-            <h1 className="font-display text-2xl font-extrabold sm:text-3xl" style={{ color:'#f5f0e8' }}>{trip.name}</h1>
+            <h1 className="font-display text-2xl font-extrabold sm:text-3xl" style={{ color:'var(--color-bone)' }}>{trip.name}</h1>
             {trip.status !== 'active' && <span className="sticker mt-1 inline-block">{trip.status.toUpperCase()}</span>}
           </div>
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3">
           <div className="bcard bcard-yellow p-4" style={{ background:'rgba(245,166,35,0.08)' }}>
-            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color:'rgba(245,240,232,0.6)' }}>Total Spend</p>
-            <p className="font-display text-xl font-extrabold mt-0.5" style={{ color:'#f5a623' }}>{toRupees(trip.totalSpend)}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color:'rgba(var(--rt-bone-rgb),0.6)' }}>Total Spend</p>
+            <p className="font-display text-xl font-extrabold mt-0.5" style={{ color:'var(--color-marigold)' }}>{toRupees(trip.totalSpend)}</p>
           </div>
           <div className="bcard bcard-aqua p-4" style={{ background:'rgba(0,212,200,0.08)' }}>
-            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color:'rgba(245,240,232,0.6)' }}>Budget</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color:'rgba(var(--rt-bone-rgb),0.6)' }}>Budget</p>
             {trip.budget ? (
               <>
                 <p className="font-display text-xl font-extrabold mt-0.5" style={{ color:budgetColor }}>{trip.budgetUsedPct}%</p>
-                <div className="mt-1.5 h-1.5 rounded-full overflow-hidden" style={{ background:'rgba(245,240,232,0.1)' }}>
+                <div className="mt-1.5 h-1.5 rounded-full overflow-hidden" style={{ background:'rgba(var(--rt-bone-rgb),0.1)' }}>
                   <motion.div initial={{ width:0 }} animate={{ width:`${Math.min(100,trip.budgetUsedPct||0)}%` }} transition={{ duration:0.8 }}
                     className="h-full rounded-full" style={{ background:budgetColor }} />
                 </div>
               </>
-            ) : <p className="font-display text-sm font-bold mt-0.5" style={{ color:'rgba(245,240,232,0.4)' }}>Not set</p>}
+            ) : <p className="font-display text-sm font-bold mt-0.5" style={{ color:'rgba(var(--rt-bone-rgb),0.4)' }}>Not set</p>}
           </div>
         </div>
 
         {/* Balances */}
         {balances.some(b => b.net !== 0) && (
           <div className="bcard mt-4 p-4">
-            <p className="font-display text-sm font-extrabold mb-3" style={{ color:'#f5f0e8' }}>Trip Balances</p>
+            <p className="font-display text-sm font-extrabold mb-3" style={{ color:'var(--color-bone)' }}>Trip Balances</p>
             <div className="space-y-2">
               {balances.map((b) => (
                 <div key={b.userId} className="flex items-center justify-between">
                   <span className="flex items-center gap-2 text-sm"><Avatar url={b.avatarUrl} name={b.name} size="h-6 w-6" />{b.name.split(' ')[0]}</span>
-                  <span className="font-display text-sm font-bold" style={{ color: b.net>=0?'#b8f02a':'#ff3d6e' }}>{b.net>=0?'+':'−'}{toRupees(Math.abs(b.net))}</span>
+                  <span className="font-display text-sm font-bold" style={{ color: b.net>=0?'var(--color-lime)':'var(--color-hot-pink)' }}>{b.net>=0?'+':'−'}{toRupees(Math.abs(b.net))}</span>
                 </div>
               ))}
             </div>
@@ -163,36 +163,36 @@ export default function TripDetailPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {leaderboard.biggestSpender && (
               <div className="bcard bcard-yellow p-4" style={{ background:'rgba(245,166,35,0.08)' }}>
-                <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color:'rgba(245,240,232,0.5)' }}>👑 Biggest Spender</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color:'rgba(var(--rt-bone-rgb),0.5)' }}>👑 Biggest Spender</p>
                 <div className="flex items-center gap-2">
                   <Avatar url={leaderboard.biggestSpender.avatarUrl} name={leaderboard.biggestSpender.name} size="h-8 w-8" />
                   <div>
-                    <p className="font-display text-sm font-extrabold" style={{ color:'#f5f0e8' }}>{leaderboard.biggestSpender.name.split(' ')[0]}</p>
-                    <p className="text-xs font-bold" style={{ color:'#f5a623' }}>{toRupees(leaderboard.biggestSpender.amount)}</p>
+                    <p className="font-display text-sm font-extrabold" style={{ color:'var(--color-bone)' }}>{leaderboard.biggestSpender.name.split(' ')[0]}</p>
+                    <p className="text-xs font-bold" style={{ color:'var(--color-marigold)' }}>{toRupees(leaderboard.biggestSpender.amount)}</p>
                   </div>
                 </div>
               </div>
             )}
             {leaderboard.mostActive && (
               <div className="bcard bcard-lime p-4" style={{ background:'rgba(184,240,42,0.08)' }}>
-                <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color:'rgba(245,240,232,0.5)' }}>⚡ Most Active</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color:'rgba(var(--rt-bone-rgb),0.5)' }}>⚡ Most Active</p>
                 <div className="flex items-center gap-2">
                   <Avatar url={leaderboard.mostActive.avatarUrl} name={leaderboard.mostActive.name} size="h-8 w-8" />
                   <div>
-                    <p className="font-display text-sm font-extrabold" style={{ color:'#f5f0e8' }}>{leaderboard.mostActive.name.split(' ')[0]}</p>
-                    <p className="text-xs font-bold" style={{ color:'#b8f02a' }}>{leaderboard.mostActive.count} expenses</p>
+                    <p className="font-display text-sm font-extrabold" style={{ color:'var(--color-bone)' }}>{leaderboard.mostActive.name.split(' ')[0]}</p>
+                    <p className="text-xs font-bold" style={{ color:'var(--color-lime)' }}>{leaderboard.mostActive.count} expenses</p>
                   </div>
                 </div>
               </div>
             )}
             {leaderboard.topPhotographer && (
               <div className="bcard bcard-pink p-4" style={{ background:'rgba(255,61,110,0.08)' }}>
-                <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color:'rgba(245,240,232,0.5)' }}>📸 Top Photographer</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color:'rgba(var(--rt-bone-rgb),0.5)' }}>📸 Top Photographer</p>
                 <div className="flex items-center gap-2">
                   <Avatar url={leaderboard.topPhotographer.avatarUrl} name={leaderboard.topPhotographer.name} size="h-8 w-8" />
                   <div>
-                    <p className="font-display text-sm font-extrabold" style={{ color:'#f5f0e8' }}>{leaderboard.topPhotographer.name.split(' ')[0]}</p>
-                    <p className="text-xs font-bold" style={{ color:'#ff3d6e' }}>{leaderboard.topPhotographer.count} photos</p>
+                    <p className="font-display text-sm font-extrabold" style={{ color:'var(--color-bone)' }}>{leaderboard.topPhotographer.name.split(' ')[0]}</p>
+                    <p className="text-xs font-bold" style={{ color:'var(--color-hot-pink)' }}>{leaderboard.topPhotographer.count} photos</p>
                   </div>
                 </div>
               </div>
@@ -205,7 +205,7 @@ export default function TripDetailPage() {
         {expenses.length === 0 ? (
           <div className="bcard p-8 text-center">
             <p className="text-3xl mb-2">🧾</p>
-            <p style={{ color:'rgba(245,240,232,0.4)' }}>Abhi tak koi kharcha is trip mein nahi. Squad page se expense add karte waqt trip select karo.</p>
+            <p style={{ color:'rgba(var(--rt-bone-rgb),0.4)' }}>Abhi tak koi kharcha is trip mein nahi. Squad page se expense add karte waqt trip select karo.</p>
             <button onClick={openTagModal} className="bbtn bbtn-aqua mt-4 gap-2">
               <Tag className="h-4 w-4" /> Purane kharche tag karo
             </button>
@@ -216,16 +216,16 @@ export default function TripDetailPage() {
             <div className="space-y-2">
               {expenses.map((e) => (
                 <div key={e.id} className="bcard flex items-center gap-3 p-4">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg" style={{ background:'rgba(245,240,232,0.1)' }}>{CE[e.category]}</div>
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg" style={{ background:'rgba(var(--rt-bone-rgb),0.1)' }}>{CE[e.category]}</div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-display font-bold text-sm" style={{ color:'#f5f0e8' }}>{e.title}</p>
-                    <p className="text-xs" style={{ color:'rgba(245,240,232,0.5)' }}>{e.paid_by_name.split(' ')[0]} ne diya</p>
+                    <p className="truncate font-display font-bold text-sm" style={{ color:'var(--color-bone)' }}>{e.title}</p>
+                    <p className="text-xs" style={{ color:'rgba(var(--rt-bone-rgb),0.5)' }}>{e.paid_by_name.split(' ')[0]} ne diya</p>
                   </div>
-                  <p className="font-display font-bold" style={{ color:'#f5a623' }}>{toRupees(Number(e.amount))}</p>
+                  <p className="font-display font-bold" style={{ color:'var(--color-marigold)' }}>{toRupees(Number(e.amount))}</p>
                 </div>
               ))}
             </div>
-            <button onClick={openTagModal} className="mt-3 flex items-center gap-1.5 text-xs font-bold" style={{ color:'#00d4c8' }}>
+            <button onClick={openTagModal} className="mt-3 flex items-center gap-1.5 text-xs font-bold" style={{ color:'var(--color-aqua)' }}>
               <Tag className="h-3.5 w-3.5" /> Aur purane kharche tag karo
             </button>
           </>
@@ -236,7 +236,7 @@ export default function TripDetailPage() {
             <p className="sticker sticker-pink mb-3">Trip Memories</p>
             <div className="grid grid-cols-3 gap-2">
               {photos.map((p) => (
-                <img key={p.id} src={assetUrl(p.url)} alt={p.caption||'memory'} className="aspect-square w-full rounded-xl object-cover" style={{ border:'2px solid rgba(245,240,232,0.1)' }} />
+                <img key={p.id} src={assetUrl(p.url)} alt={p.caption||'memory'} className="aspect-square w-full rounded-xl object-cover" style={{ border:'2px solid rgba(var(--rt-bone-rgb),0.1)' }} />
               ))}
             </div>
           </div>
@@ -253,16 +253,16 @@ export default function TripDetailPage() {
             <motion.div initial={{ y:'100%' }} animate={{ y:0 }} exit={{ y:'100%' }}
               transition={{ type:'spring', damping:30, stiffness:340 }}
               className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-lg rounded-t-3xl"
-              style={{ background:'#1a1612', border:'2px solid rgba(245,240,232,0.15)', borderBottom:'none', maxHeight:'80vh', overflowY:'auto' }}>
+              style={{ background:'var(--color-ink-900)', border:'2px solid rgba(var(--rt-bone-rgb),0.15)', borderBottom:'none', maxHeight:'80vh', overflowY:'auto' }}>
               <div className="flex justify-center pt-3 pb-1">
-                <div className="h-1 w-10 rounded-full" style={{ background:'rgba(245,240,232,0.2)' }} />
+                <div className="h-1 w-10 rounded-full" style={{ background:'rgba(var(--rt-bone-rgb),0.2)' }} />
               </div>
               <div className="flex items-center justify-between px-5 pt-2 pb-4">
                 <div>
-                  <h2 className="font-display text-lg font-extrabold" style={{ color:'#f5f0e8' }}>Purane kharche tag karo</h2>
-                  <p className="text-xs" style={{ color:'rgba(245,240,232,0.5)' }}>Squad ke saare untagged expenses yahan hain</p>
+                  <h2 className="font-display text-lg font-extrabold" style={{ color:'var(--color-bone)' }}>Purane kharche tag karo</h2>
+                  <p className="text-xs" style={{ color:'rgba(var(--rt-bone-rgb),0.5)' }}>Squad ke saare untagged expenses yahan hain</p>
                 </div>
-                <button onClick={() => setShowTagModal(false)} className="rounded-full p-2" style={{ background:'rgba(245,240,232,0.08)', color:'rgba(245,240,232,0.5)' }}>
+                <button onClick={() => setShowTagModal(false)} className="rounded-full p-2" style={{ background:'rgba(var(--rt-bone-rgb),0.08)', color:'rgba(var(--rt-bone-rgb),0.5)' }}>
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -273,19 +273,19 @@ export default function TripDetailPage() {
                 ) : unassigned.length === 0 ? (
                   <div className="py-10 text-center">
                     <p className="text-3xl mb-2">✅</p>
-                    <p className="text-sm" style={{ color:'rgba(245,240,232,0.4)' }}>Sab kharche already kisi trip mein tagged hain!</p>
+                    <p className="text-sm" style={{ color:'rgba(var(--rt-bone-rgb),0.4)' }}>Sab kharche already kisi trip mein tagged hain!</p>
                   </div>
                 ) : unassigned.map((e) => (
-                  <div key={e.id} className="flex items-center gap-3 rounded-2xl p-3" style={{ background:'rgba(245,240,232,0.05)', border:'2px solid rgba(245,240,232,0.1)' }}>
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg" style={{ background:'rgba(245,240,232,0.1)' }}>{CE[e.category]||'📦'}</div>
+                  <div key={e.id} className="flex items-center gap-3 rounded-2xl p-3" style={{ background:'rgba(var(--rt-bone-rgb),0.05)', border:'2px solid rgba(var(--rt-bone-rgb),0.1)' }}>
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg" style={{ background:'rgba(var(--rt-bone-rgb),0.1)' }}>{CE[e.category]||'📦'}</div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-display font-bold text-sm" style={{ color:'#f5f0e8' }}>{e.title}</p>
-                      <p className="text-[11px]" style={{ color:'rgba(245,240,232,0.5)' }}>{e.paid_by_name.split(' ')[0]} · {new Date(e.expense_date).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</p>
+                      <p className="truncate font-display font-bold text-sm" style={{ color:'var(--color-bone)' }}>{e.title}</p>
+                      <p className="text-[11px]" style={{ color:'rgba(var(--rt-bone-rgb),0.5)' }}>{e.paid_by_name.split(' ')[0]} · {new Date(e.expense_date).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</p>
                     </div>
-                    <p className="font-display font-bold text-sm shrink-0" style={{ color:'#f5a623' }}>{toRupees(Number(e.amount))}</p>
+                    <p className="font-display font-bold text-sm shrink-0" style={{ color:'var(--color-marigold)' }}>{toRupees(Number(e.amount))}</p>
                     <button onClick={() => tagExpense(e.id)} disabled={tagging===e.id}
                       className="shrink-0 rounded-xl p-2 transition active:scale-90 disabled:opacity-50"
-                      style={{ background:'rgba(0,212,200,0.15)', border:'2px solid rgba(0,212,200,0.4)', color:'#00d4c8' }}>
+                      style={{ background:'rgba(0,212,200,0.15)', border:'2px solid rgba(0,212,200,0.4)', color:'var(--color-aqua)' }}>
                       {tagging===e.id ? <span className="h-4 w-4 block animate-pulse">...</span> : <Check className="h-4 w-4" />}
                     </button>
                   </div>

@@ -5,7 +5,7 @@ import { play, initSound } from '../lib/sound';
 
 interface Member { id: string; name: string; avatar_url?: string }
 
-const COLORS = ['#f5a623','#ff3d6e','#b8f02a','#00d4c8','#a78bfa','#fb923c','#e879f9','#34d399'];
+const COLORS = ['var(--color-marigold)','var(--color-hot-pink)','var(--color-lime)','var(--color-aqua)','#a78bfa','#fb923c','#e879f9','var(--color-mint)'];
 
 export default function BakraWheel({ open, onClose, members }: { open: boolean; onClose: () => void; members: Member[] }) {
   const [spinning, setSpinning] = useState(false);
@@ -48,7 +48,7 @@ export default function BakraWheel({ open, onClose, members }: { open: boolean; 
   return (
     <Modal open={open} onClose={onClose} title="🎡 Bakra Wheel — Kaun Bharega?">
       <div className="flex flex-col items-center gap-5">
-        <p className="text-xs text-center" style={{ color: 'rgba(245,240,232,0.5)' }}>
+        <p className="text-xs text-center" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>
           Spin karo — destiny decide karegi kaun pay karega aaj 💀
         </p>
 
@@ -61,16 +61,16 @@ export default function BakraWheel({ open, onClose, members }: { open: boolean; 
             <svg viewBox="-130 -130 260 260" width="100%" height="100%">
               {members.map((m, i) => (
                 <g key={m.id}>
-                  <path d={makeSlice(i)} fill={COLORS[i % COLORS.length]} stroke="#0e0c0a" strokeWidth="2" />
+                  <path d={makeSlice(i)} fill={COLORS[i % COLORS.length]} stroke="var(--color-ink-950)" strokeWidth="2" />
                   <text x={labelPos(i).x} y={labelPos(i).y} textAnchor="middle" dominantBaseline="middle"
-                    fill="#0e0c0a" fontSize="10" fontWeight="800" fontFamily="Sora, sans-serif"
+                    fill="var(--color-ink-950)" fontSize="10" fontWeight="800" fontFamily="Sora, sans-serif"
                     transform={`rotate(${i * sliceDeg + sliceDeg / 2}, ${labelPos(i).x}, ${labelPos(i).y})`}>
                     {m.name.split(' ')[0].slice(0, 7)}
                   </text>
                 </g>
               ))}
-              <circle r="20" fill="#0e0c0a" stroke="#f5a623" strokeWidth="3" />
-              <text textAnchor="middle" dominantBaseline="middle" fill="#f5a623" fontSize="14" fontWeight="900">💀</text>
+              <circle r="20" fill="var(--color-ink-950)" stroke="var(--color-marigold)" strokeWidth="3" />
+              <text textAnchor="middle" dominantBaseline="middle" fill="var(--color-marigold)" fontSize="14" fontWeight="900">💀</text>
             </svg>
           </motion.div>
         </div>
@@ -78,8 +78,8 @@ export default function BakraWheel({ open, onClose, members }: { open: boolean; 
         {winner && !spinning && (
           <motion.div initial={{ scale: 0, rotate: -10 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', bounce: 0.5 }}
             className="bcard bcard-pink w-full p-4 text-center">
-            <p className="font-display text-2xl font-extrabold" style={{ color: '#f5f0e8' }}>{winner.name.split(' ')[0]} 💀</p>
-            <p className="mt-1 text-sm" style={{ color: 'rgba(245,240,232,0.6)' }}>Aaj ka bakra mil gaya. Screenshot le lo. 📸</p>
+            <p className="font-display text-2xl font-extrabold" style={{ color: 'var(--color-bone)' }}>{winner.name.split(' ')[0]} 💀</p>
+            <p className="mt-1 text-sm" style={{ color: 'rgba(var(--rt-bone-rgb),0.6)' }}>Aaj ka bakra mil gaya. Screenshot le lo. 📸</p>
           </motion.div>
         )}
 
@@ -87,7 +87,7 @@ export default function BakraWheel({ open, onClose, members }: { open: boolean; 
           className="bbtn bbtn-pink w-full justify-center py-3 text-base">
           {spinning ? 'Ghoom raha hai...' : winner ? '🔄 Phir se spin karo' : '🎡 SPIN KARO'}
         </button>
-        {members.length < 2 && <p className="text-xs text-center" style={{ color: '#fb7185' }}>Pehle squad mein koi aur add karo bhai 😅</p>}
+        {members.length < 2 && <p className="text-xs text-center" style={{ color: 'var(--color-rose)' }}>Pehle squad mein koi aur add karo bhai 😅</p>}
       </div>
     </Modal>
   );

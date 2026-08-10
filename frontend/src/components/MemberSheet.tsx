@@ -23,20 +23,20 @@ interface MemberDetail {
 }
 
 const C = {
-  bg: '#0f0d0a',
-  card: '#1a1612',
-  border: 'rgba(245,240,232,0.15)',
-  bone: '#f5f0e8',
-  dim: 'rgba(245,240,232,0.45)',
-  faint: 'rgba(245,240,232,0.12)',
-  yellow: '#f5a623',
-  green: '#b8f02a',
-  pink: '#ff3d6e',
-  aqua: '#00d4c8',
+  bg: 'var(--color-ink-950)',
+  card: 'var(--color-ink-900)',
+  border: 'rgba(var(--rt-bone-rgb),0.15)',
+  bone: 'var(--color-bone)',
+  dim: 'rgba(var(--rt-bone-rgb),0.45)',
+  faint: 'rgba(var(--rt-bone-rgb),0.12)',
+  yellow: 'var(--color-marigold)',
+  green: 'var(--color-lime)',
+  pink: 'var(--color-hot-pink)',
+  aqua: 'var(--color-aqua)',
 };
 
 function Skeleton({ w = '100%', h = '1rem', r = '0.5rem' }: { w?: string; h?: string; r?: string }) {
-  return <div style={{ width:w, height:h, borderRadius:r, background:'rgba(245,240,232,0.08)', animation:'pulse 1.5s ease-in-out infinite' }} />;
+  return <div style={{ width:w, height:h, borderRadius:r, background:'rgba(var(--rt-bone-rgb),0.08)', animation:'pulse 1.5s ease-in-out infinite' }} />;
 }
 
 export default function MemberSheet({ open, onClose, squadId, userId, currentUserId }: {
@@ -79,7 +79,7 @@ export default function MemberSheet({ open, onClose, squadId, userId, currentUse
             </div>
 
             {/* Close */}
-            <button onClick={onClose} style={{ position:'absolute', right:'1rem', top:'1rem', background:'rgba(245,240,232,0.08)', border:`1px solid ${C.border}`, borderRadius:'0.5rem', padding:'0.4rem', color:C.dim, cursor:'pointer' }}>
+            <button onClick={onClose} style={{ position:'absolute', right:'1rem', top:'1rem', background:'rgba(var(--rt-bone-rgb),0.08)', border:`1px solid ${C.border}`, borderRadius:'0.5rem', padding:'0.4rem', color:C.dim, cursor:'pointer' }}>
               <X size={16} />
             </button>
 
@@ -87,14 +87,14 @@ export default function MemberSheet({ open, onClose, squadId, userId, currentUse
               {err ? (
                 <div style={{ textAlign:'center', padding:'3rem 1rem' }}>
                   <p style={{ fontSize:'2rem', marginBottom:'0.75rem' }}>😵</p>
-                  <p style={{ color:'#ff3d6e', fontSize:'0.875rem', fontWeight:700, marginBottom:'0.5rem' }}>Load nahi hua bhai</p>
-                  <p style={{ color:'rgba(245,240,232,0.4)', fontSize:'0.75rem' }}>{err}</p>
-                  <button onClick={onClose} style={{ marginTop:'1rem', background:'rgba(245,166,35,0.2)', border:'2px solid rgba(245,166,35,0.4)', borderRadius:'0.75rem', padding:'0.5rem 1.25rem', color:'#f5a623', fontWeight:700, cursor:'pointer' }}>Close</button>
+                  <p style={{ color:'var(--color-hot-pink)', fontSize:'0.875rem', fontWeight:700, marginBottom:'0.5rem' }}>Load nahi hua bhai</p>
+                  <p style={{ color:'rgba(var(--rt-bone-rgb),0.4)', fontSize:'0.75rem' }}>{err}</p>
+                  <button onClick={onClose} style={{ marginTop:'1rem', background:'rgba(245,166,35,0.2)', border:'2px solid rgba(245,166,35,0.4)', borderRadius:'0.75rem', padding:'0.5rem 1.25rem', color:'var(--color-marigold)', fontWeight:700, cursor:'pointer' }}>Close</button>
                 </div>
               ) : loading || !member ? (
                 /* SKELETON */
                 <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'1rem', paddingTop:'1.5rem' }}>
-                  <div style={{ width:'5rem', height:'5rem', borderRadius:'50%', background:'rgba(245,240,232,0.08)', animation:'pulse 1.5s ease-in-out infinite' }} />
+                  <div style={{ width:'5rem', height:'5rem', borderRadius:'50%', background:'rgba(var(--rt-bone-rgb),0.08)', animation:'pulse 1.5s ease-in-out infinite' }} />
                   <Skeleton w="140px" h="1.5rem" r="0.75rem" />
                   <Skeleton w="200px" h="2.5rem" r="1.25rem" />
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem', width:'100%', marginTop:'0.5rem' }}>
@@ -109,7 +109,7 @@ export default function MemberSheet({ open, onClose, squadId, userId, currentUse
                     <div style={{ position:'relative' }}>
                       <Avatar url={member.avatarUrl} name={member.name} size="h-20 w-20" />
                       {member.role === 'admin' && (
-                        <span style={{ position:'absolute', bottom:'-4px', right:'-4px', background:C.yellow, color:'#0e0c0a', fontSize:'0.5rem', fontWeight:900, padding:'2px 8px', borderRadius:'99px', border:'2px solid #0e0c0a', transform:'rotate(6deg)', textTransform:'uppercase', letterSpacing:'0.05em' }}>ADMIN</span>
+                        <span style={{ position:'absolute', bottom:'-4px', right:'-4px', background:C.yellow, color:'var(--color-ink-950)', fontSize:'0.5rem', fontWeight:900, padding:'2px 8px', borderRadius:'99px', border:'2px solid #0e0c0a', transform:'rotate(6deg)', textTransform:'uppercase', letterSpacing:'0.05em' }}>ADMIN</span>
                       )}
                     </div>
 
@@ -133,7 +133,7 @@ export default function MemberSheet({ open, onClose, squadId, userId, currentUse
                       { label:'Total Paid', value: toRupees(member.totalPaid), color: C.yellow },
                       { label:'Net Balance', value: `${member.net>=0?'+':'−'}${toRupees(Math.abs(member.net))}`, color: member.net>=0?C.green:C.pink },
                     ].map((stat) => (
-                      <div key={stat.label} style={{ background:'rgba(245,240,232,0.06)', border:`2px solid ${C.border}`, borderRadius:'0.75rem', padding:'0.75rem' }}>
+                      <div key={stat.label} style={{ background:'rgba(var(--rt-bone-rgb),0.06)', border:`2px solid ${C.border}`, borderRadius:'0.75rem', padding:'0.75rem' }}>
                         <p style={{ fontSize:'0.6rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', color:C.dim, marginBottom:'0.25rem' }}>{stat.label}</p>
                         <p style={{ fontFamily:'Sora, sans-serif', fontSize:'1rem', fontWeight:800, color:stat.color }}>{stat.value}</p>
                       </div>
@@ -141,7 +141,7 @@ export default function MemberSheet({ open, onClose, squadId, userId, currentUse
                   </div>
 
                   {/* LEVEL + XP */}
-                  <div style={{ background:'rgba(245,240,232,0.06)', border:`2px solid ${C.border}`, borderRadius:'0.75rem', padding:'1rem', marginBottom:'0.75rem' }}>
+                  <div style={{ background:'rgba(var(--rt-bone-rgb),0.06)', border:`2px solid ${C.border}`, borderRadius:'0.75rem', padding:'1rem', marginBottom:'0.75rem' }}>
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'0.5rem' }}>
                       <div>
                         <p style={{ fontSize:'0.6rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', color:C.dim }}>Squad Level</p>
@@ -149,7 +149,7 @@ export default function MemberSheet({ open, onClose, squadId, userId, currentUse
                       </div>
                       <p style={{ fontSize:'0.8rem', fontWeight:700, color:C.dim }}>{member.xp} / {member.nextXp} XP</p>
                     </div>
-                    <div style={{ height:'10px', borderRadius:'99px', background:'rgba(245,240,232,0.1)', overflow:'hidden' }}>
+                    <div style={{ height:'10px', borderRadius:'99px', background:'rgba(var(--rt-bone-rgb),0.1)', overflow:'hidden' }}>
                       <motion.div initial={{ width:0 }} animate={{ width:`${xpPct}%` }} transition={{ duration:1, ease:'easeOut' }}
                         style={{ height:'100%', borderRadius:'99px', background:'linear-gradient(90deg, #f5a623, #ff3d6e)' }} />
                     </div>
@@ -171,7 +171,7 @@ export default function MemberSheet({ open, onClose, squadId, userId, currentUse
 
                   {/* UPI QR */}
                   {member.upiId ? (
-                    <div style={{ background:'rgba(245,240,232,0.06)', border:`2px solid ${C.border}`, borderRadius:'0.75rem', padding:'1rem' }}>
+                    <div style={{ background:'rgba(var(--rt-bone-rgb),0.06)', border:`2px solid ${C.border}`, borderRadius:'0.75rem', padding:'1rem' }}>
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'0.75rem' }}>
                         <div>
                           <p style={{ fontSize:'0.6rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', color:C.dim }}>UPI Payment</p>

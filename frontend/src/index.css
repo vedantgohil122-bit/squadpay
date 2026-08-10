@@ -4,26 +4,67 @@
    SQUADPAY v3 — DESI NEO-BRUTALIST DESIGN SYSTEM
    Personality: Street poster × Meme sticker × Scoreboard
    Palette: Warm black, Marigold, Hot pink, Lime, Bone white
+
+   THEME SYSTEM: colors are defined as runtime custom properties on
+   :root (dark, default) and [data-theme="light"] (light override),
+   then @theme maps Tailwind's color tokens onto those same variables.
+   That means every existing Tailwind class (bg-ink-900, text-bone/50,
+   border-aqua) AND every .bcard/.bbtn/.binput rule below automatically
+   becomes theme-aware — nothing about how colors are DEFINED had to
+   change in any component, only how the values themselves resolve.
+   The only place other files needed edits was raw inline hex strings
+   (style={{ color: '#f5f0e8' }}) that bypassed variables entirely —
+   those were swapped for var(--color-bone) etc. across the app.
    ============================================================ */
+
+:root {
+  --rt-ink-950: #0e0c0a;
+  --rt-ink-900: #161310;
+  --rt-ink-800: #211d18;
+  --rt-bone:      #f5f0e8;
+  --rt-bone-rgb:  245,240,232;   /* for rgba(var(--rt-bone-rgb), X) muted-text patterns */
+  --rt-marigold:  #f5a623;
+  --rt-hot-pink:  #ff3d6e;
+  --rt-lime:      #b8f02a;
+  --rt-aqua:      #00d4c8;
+  --rt-mint:      #34d399;
+  --rt-rose:      #fb7185;
+  --rt-shadow-rgb: 245,240,232;  /* neo-brutalist border/shadow color */
+}
+
+/* Light theme: backgrounds go light, "bone" (the primary text color
+   everywhere) flips to a dark ink so text stays readable — everything
+   else (accents) stays put, since marigold/pink/lime/aqua read fine on
+   both. Shadow color flips to dark too, so the brutalist border/shadow
+   look still reads correctly against a light card. */
+[data-theme="light"] {
+  --rt-ink-950: #fdf8ec;
+  --rt-ink-900: #ffffff;
+  --rt-ink-800: #f2ece0;
+  --rt-bone:      #1a1613;
+  --rt-bone-rgb:  26,22,19;
+  --rt-shadow-rgb: 26,22,19;
+}
+
 @theme {
   --font-display: "Sora", system-ui, sans-serif;
   --font-body:    "Inter", system-ui, sans-serif;
 
   /* Backgrounds */
-  --color-ink-950: #0e0c0a;
-  --color-ink-900: #161310;
-  --color-ink-800: #211d18;
+  --color-ink-950: var(--rt-ink-950);
+  --color-ink-900: var(--rt-ink-900);
+  --color-ink-800: var(--rt-ink-800);
 
   /* Brand */
-  --color-marigold:  #f5a623;
-  --color-hot-pink:  #ff3d6e;
-  --color-lime:      #b8f02a;
-  --color-aqua:      #00d4c8;
-  --color-bone:      #f5f0e8;
+  --color-marigold:  var(--rt-marigold);
+  --color-hot-pink:  var(--rt-hot-pink);
+  --color-lime:      var(--rt-lime);
+  --color-aqua:      var(--rt-aqua);
+  --color-bone:      var(--rt-bone);
 
   /* Status */
-  --color-mint:  #34d399;
-  --color-rose:  #fb7185;
+  --color-mint:  var(--rt-mint);
+  --color-rose:  var(--rt-rose);
 
   /* Glass kept for overlays only */
   --color-glass: #ffffff0a;
@@ -35,17 +76,18 @@ body {
   background: var(--color-ink-950);
   color: var(--color-bone);
   font-family: var(--font-body);
+  transition: background-color 0.2s, color 0.2s;
 }
 
 /* ---- BRUTALIST CARD ---- */
 .bcard {
   background: var(--color-ink-900);
-  border: 2px solid rgba(245,240,232,0.2);
+  border: 2px solid rgba(var(--rt-bone-rgb),0.2);
   border-radius: 1rem;
-  box-shadow: 4px 4px 0 rgba(245,240,232,0.12);
-  transition: box-shadow 0.12s, transform 0.12s;
+  box-shadow: 4px 4px 0 rgba(var(--rt-shadow-rgb),0.12);
+  transition: box-shadow 0.12s, transform 0.12s, background-color 0.2s, border-color 0.2s;
 }
-.bcard:hover { box-shadow: 6px 6px 0 rgba(245,240,232,0.18); transform: translate(-1px,-1px); }
+.bcard:hover { box-shadow: 6px 6px 0 rgba(var(--rt-shadow-rgb),0.18); transform: translate(-1px,-1px); }
 
 /* ---- ACCENT CARD (marigold border) ---- */
 .bcard-yellow { border-color: var(--color-marigold); box-shadow: 4px 4px 0 var(--color-marigold); }
@@ -70,11 +112,11 @@ body {
 
 .bbtn-ghost {
   background: transparent; color: var(--color-bone);
-  border: 2px solid rgba(245,240,232,0.3);
-  box-shadow: 3px 3px 0 rgba(245,240,232,0.15);
+  border: 2px solid rgba(var(--rt-bone-rgb),0.3);
+  box-shadow: 3px 3px 0 rgba(var(--rt-bone-rgb),0.15);
 }
-.bbtn-ghost:hover { box-shadow: 5px 5px 0 rgba(245,240,232,0.25); transform: translate(-1px,-1px); }
-.bbtn-ghost:active { box-shadow: 1px 1px 0 rgba(245,240,232,0.15); transform: translate(2px,2px); }
+.bbtn-ghost:hover { box-shadow: 5px 5px 0 rgba(var(--rt-bone-rgb),0.25); transform: translate(-1px,-1px); }
+.bbtn-ghost:active { box-shadow: 1px 1px 0 rgba(var(--rt-bone-rgb),0.15); transform: translate(2px,2px); }
 
 .bbtn-pink  { background: var(--color-hot-pink); }
 .bbtn-lime  { background: var(--color-lime); }
@@ -97,11 +139,11 @@ body {
 /* ---- INPUT ---- */
 .binput {
   width: 100%; background: var(--color-ink-800);
-  border: 2px solid rgba(245,240,232,0.2); border-radius: 0.75rem;
+  border: 2px solid rgba(var(--rt-bone-rgb),0.2); border-radius: 0.75rem;
   padding: 0.65rem 1rem; font-size: 0.875rem; color: var(--color-bone);
-  outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none; transition: border-color 0.15s, box-shadow 0.15s, background-color 0.2s;
 }
-.binput::placeholder { color: rgba(245,240,232,0.3); }
+.binput::placeholder { color: rgba(var(--rt-bone-rgb),0.3); }
 .binput:focus { border-color: var(--color-marigold); box-shadow: 0 0 0 3px rgba(245,166,35,0.15); }
 
 /* ---- MARQUEE tape ---- */
@@ -112,10 +154,10 @@ body {
 
 /* ---- UTILITY ---- */
 .font-display { font-family: var(--font-display); }
-.glass { background: var(--color-glass); border: 1px solid rgba(245,240,232,0.1); backdrop-filter: blur(16px); border-radius: 1.25rem; }
+.glass { background: var(--color-glass); border: 1px solid rgba(var(--rt-bone-rgb),0.1); backdrop-filter: blur(16px); border-radius: 1.25rem; }
 
 /* ---- SCROLLBAR ---- */
-::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: var(--color-ink-900); } ::-webkit-scrollbar-thumb { background: rgba(245,240,232,0.2); border-radius: 99px; }
+::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: var(--color-ink-900); } ::-webkit-scrollbar-thumb { background: rgba(var(--rt-bone-rgb),0.2); border-radius: 99px; }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }

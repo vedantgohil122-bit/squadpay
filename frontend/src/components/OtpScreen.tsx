@@ -74,17 +74,17 @@ export default function OtpScreen({
 
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="w-full">
-      <button onClick={onBack} className="mb-4 flex items-center gap-1.5 text-xs font-bold" style={{ color: 'rgba(245,240,232,0.5)' }}>
+      <button onClick={onBack} className="mb-4 flex items-center gap-1.5 text-xs font-bold" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>
         <ArrowLeft size={14} /> Back
       </button>
 
       <div className="flex flex-col items-center text-center mb-6">
         <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: 'rgba(245,166,35,0.15)', border: '2px solid rgba(245,166,35,0.4)' }}>
-          <Mail size={20} color="#f5a623" />
+          <Mail size={20} color="var(--color-marigold)" />
         </div>
-        <h2 className="font-display text-lg font-extrabold" style={{ color: '#f5f0e8' }}>{title}</h2>
-        <p className="mt-1 text-xs" style={{ color: 'rgba(245,240,232,0.5)' }}>
-          {subtitle || 'Code bheja gaya hai'} <b style={{ color: '#f5a623' }}>{email}</b> pe
+        <h2 className="font-display text-lg font-extrabold" style={{ color: 'var(--color-bone)' }}>{title}</h2>
+        <p className="mt-1 text-xs" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>
+          {subtitle || 'Code bheja gaya hai'} <b style={{ color: 'var(--color-marigold)' }}>{email}</b> pe
         </p>
       </div>
 
@@ -101,32 +101,32 @@ export default function OtpScreen({
             onKeyDown={(e) => handleKeyDown(i, e)}
             className="h-12 w-10 rounded-xl text-center text-lg font-extrabold outline-none transition sm:h-14 sm:w-12"
             style={{
-              background: '#1a1612', color: '#f5f0e8',
-              border: `2px solid ${error ? '#ff3d6e' : d ? '#f5a623' : 'rgba(245,240,232,0.15)'}`,
+              background: 'var(--color-ink-900)', color: 'var(--color-bone)',
+              border: `2px solid ${error ? 'var(--color-hot-pink)' : d ? 'var(--color-marigold)' : 'rgba(var(--rt-bone-rgb),0.15)'}`,
             }}
           />
         ))}
       </div>
 
       {error && (
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-xs font-semibold mb-4" style={{ color: '#ff3d6e' }}>
+        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-xs font-semibold mb-4" style={{ color: 'var(--color-hot-pink)' }}>
           {error}
         </motion.p>
       )}
 
       <button onClick={submit} disabled={busy || code.length !== 6}
         className="w-full rounded-xl py-3.5 font-display font-extrabold text-sm transition active:scale-[0.98] disabled:opacity-50"
-        style={{ background: '#f5a623', color: '#0e0c0a', border: '2px solid rgba(0,0,0,0.2)' }}>
+        style={{ background: 'var(--color-marigold)', color: 'var(--color-ink-950)', border: '2px solid rgba(0,0,0,0.2)' }}>
         {busy ? 'Verify ho raha hai...' : 'Verify karo →'}
       </button>
 
       <div className="mt-4 text-center">
         {cooldown > 0 ? (
-          <p className="text-xs" style={{ color: 'rgba(245,240,232,0.4)' }}>
-            Naya code <b style={{ color: 'rgba(245,240,232,0.6)' }}>{cooldown}s</b> mein bhej sakte ho
+          <p className="text-xs" style={{ color: 'rgba(var(--rt-bone-rgb),0.4)' }}>
+            Naya code <b style={{ color: 'rgba(var(--rt-bone-rgb),0.6)' }}>{cooldown}s</b> mein bhej sakte ho
           </p>
         ) : (
-          <button onClick={resend} disabled={resending} className="inline-flex items-center gap-1.5 text-xs font-bold" style={{ color: '#f5a623' }}>
+          <button onClick={resend} disabled={resending} className="inline-flex items-center gap-1.5 text-xs font-bold" style={{ color: 'var(--color-marigold)' }}>
             <RefreshCw size={12} className={resending ? 'animate-spin' : ''} /> {resending ? 'Bhej rahe hain...' : 'Code dobara bhejo'}
           </button>
         )}

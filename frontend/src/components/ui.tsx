@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, X, Volume2, VolumeX } from 'lucide-react';
+import { Loader2, X, Volume2, VolumeX, Sun, Moon } from 'lucide-react';
 import { play, initSound, isSoundEnabled, setSoundEnabled } from '../lib/sound';
 import { assetUrl } from '../lib/api';
+import { useTheme } from '../store/theme';
 import { ReactNode, useEffect, useState } from 'react';
 import { LINES as HINGLISH_LINES } from '../lib/hinglish';
 
@@ -85,7 +86,7 @@ export const Toast = ({ msg }: { msg: string | null }) => (
       <motion.div initial={{ opacity: 0, y: -24, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -16 }}
         className="fixed inset-x-0 top-14 z-[70] flex justify-center px-4">
         <div className="max-w-sm px-5 py-3.5 text-center font-display text-sm font-bold rounded-2xl shadow-2xl"
-          style={{ background:'#f5a623', color:'#0e0c0a', border:'3px solid rgba(0,0,0,0.2)', boxShadow:'0 8px 32px rgba(245,166,35,0.4)' }}>
+          style={{ background:'var(--color-marigold)', color:'var(--color-ink-950)', border:'3px solid rgba(0,0,0,0.2)', boxShadow:'0 8px 32px rgba(245,166,35,0.4)' }}>
           {msg}
         </div>
       </motion.div>
@@ -122,6 +123,17 @@ export const MarqueeTape = () => (
 
 
 // ── SOUND TOGGLE ──────────────────────────────────────────
+export const ThemeToggle = ({ className = '' }: { className?: string }) => {
+  const { theme, toggle } = useTheme();
+  return (
+    <button onClick={() => { toggle(); play('tap'); }} className={`rounded-lg p-2 transition active:scale-90 ${className}`}
+      style={{ color: 'rgba(var(--rt-bone-rgb),0.6)' }}
+      title={theme === 'dark' ? 'Switch to light' : 'Switch to dark'}>
+      {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </button>
+  );
+};
+
 export const SoundToggle = ({ className = '' }: { className?: string }) => {
   const [on, setOn] = useState(isSoundEnabled());
   const toggle = () => {
@@ -132,7 +144,7 @@ export const SoundToggle = ({ className = '' }: { className?: string }) => {
   };
   return (
     <button onClick={toggle} className={`rounded-lg p-2 transition active:scale-90 ${className}`}
-      style={{ color: on ? 'rgba(245,240,232,0.6)' : 'rgba(245,240,232,0.25)' }}
+      style={{ color: on ? 'rgba(var(--rt-bone-rgb),0.6)' : 'rgba(var(--rt-bone-rgb),0.25)' }}
       title={on ? 'Sound on' : 'Sound off'}>
       {on ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
     </button>

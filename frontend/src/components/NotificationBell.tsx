@@ -44,7 +44,7 @@ export function NotificationBell({ squadId }: { squadId?: string }) {
         className="relative rounded-xl p-2.5 border-2 transition active:scale-90"
         style={{
           background: 'var(--color-ink-900)',
-          borderColor: unreadCount > 0 ? 'var(--color-marigold)' : 'rgba(245,240,232,0.2)',
+          borderColor: unreadCount > 0 ? 'var(--color-marigold)' : 'rgba(var(--rt-bone-rgb),0.2)',
           color: 'var(--color-bone)',
         }}
         title="Notifications"
@@ -92,28 +92,28 @@ export function NotificationBell({ squadId }: { squadId?: string }) {
             >
               {/* Drag handle — mobile only, signals "swipe down to close" */}
               <div className="flex justify-center pt-3 pb-1 sm:hidden">
-                <div className="h-1 w-10 rounded-full" style={{ background: 'rgba(245,240,232,0.25)' }} />
+                <div className="h-1 w-10 rounded-full" style={{ background: 'rgba(var(--rt-bone-rgb),0.25)' }} />
               </div>
 
-              <div className="flex items-center justify-between p-4" style={{ borderBottom: '2px solid rgba(245,240,232,0.12)' }}>
+              <div className="flex items-center justify-between p-4" style={{ borderBottom: '2px solid rgba(var(--rt-bone-rgb),0.12)' }}>
                 <div>
                   <h3 className="font-display font-extrabold text-sm" style={{ color: 'var(--color-bone)' }}>
                     Notifications {unreadCount > 0 && `• ${unreadCount} new`}
                   </h3>
-                  <p className="text-[11px]" style={{ color: 'rgba(245,240,232,0.45)' }}>Squad ki latest khabar</p>
+                  <p className="text-[11px]" style={{ color: 'rgba(var(--rt-bone-rgb),0.45)' }}>Squad ki latest khabar</p>
                 </div>
                 <div className="flex items-center gap-1.5">
                   {unreadCount > 0 && (
                     <button
                       onClick={() => { play('click'); markAllRead(squadId); }}
                       className="rounded-lg p-2 transition hover:opacity-80"
-                      style={{ background: 'rgba(245,240,232,0.08)', color: 'rgba(245,240,232,0.7)' }}
+                      style={{ background: 'rgba(var(--rt-bone-rgb),0.08)', color: 'rgba(var(--rt-bone-rgb),0.7)' }}
                       title="Mark all read"
                     >
                       <CheckCheck className="h-4 w-4" />
                     </button>
                   )}
-                  <button onClick={() => setOpen(false)} className="rounded-lg p-1.5" style={{ color: 'rgba(245,240,232,0.45)' }}>
+                  <button onClick={() => setOpen(false)} className="rounded-lg p-1.5" style={{ color: 'rgba(var(--rt-bone-rgb),0.45)' }}>
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -124,7 +124,7 @@ export function NotificationBell({ squadId }: { squadId?: string }) {
                   <div className="p-10 text-center">
                     <p className="text-3xl mb-2">🔕</p>
                     <p className="font-display font-bold text-sm" style={{ color: 'var(--color-bone)' }}>All caught up!</p>
-                    <p className="text-xs mt-1" style={{ color: 'rgba(245,240,232,0.45)' }}>No notifications abhi</p>
+                    <p className="text-xs mt-1" style={{ color: 'rgba(var(--rt-bone-rgb),0.45)' }}>No notifications abhi</p>
                   </div>
                 ) : (
                   filtered.map((n) => (
@@ -133,9 +133,9 @@ export function NotificationBell({ squadId }: { squadId?: string }) {
                       onClick={() => { markRead(n.id); setOpen(false); if (n.squad_id) nav(`/app/squad/${n.squad_id}`); }}
                       className="flex gap-3 p-4 cursor-pointer transition hover:opacity-90"
                       style={{
-                        background: n.is_read ? 'transparent' : 'rgba(245,240,232,0.04)',
+                        background: n.is_read ? 'transparent' : 'rgba(var(--rt-bone-rgb),0.04)',
                         borderLeft: n.is_read ? '3px solid transparent' : '3px solid var(--color-marigold)',
-                        borderBottom: '1px solid rgba(245,240,232,0.08)',
+                        borderBottom: '1px solid rgba(var(--rt-bone-rgb),0.08)',
                       }}
                     >
                       <div className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-sm" style={{ background: 'var(--color-ink-800)' }}>
@@ -147,11 +147,11 @@ export function NotificationBell({ squadId }: { squadId?: string }) {
                         </p>
                         <div className="flex items-center gap-2 mt-1">
                           {n.squad_name && (
-                            <span className="text-[11px] px-2 py-0.5 rounded-full font-bold" style={{ background: 'rgba(245,240,232,0.08)', color: 'rgba(245,240,232,0.5)' }}>
+                            <span className="text-[11px] px-2 py-0.5 rounded-full font-bold" style={{ background: 'rgba(var(--rt-bone-rgb),0.08)', color: 'rgba(var(--rt-bone-rgb),0.5)' }}>
                               {n.squad_emoji} {n.squad_name}
                             </span>
                           )}
-                          <span className="text-[11px]" style={{ color: 'rgba(245,240,232,0.4)' }}>{timeAgo(n.created_at)}</span>
+                          <span className="text-[11px]" style={{ color: 'rgba(var(--rt-bone-rgb),0.4)' }}>{timeAgo(n.created_at)}</span>
                         </div>
                       </div>
                       {!n.is_read && <div className="h-2 w-2 rounded-full shrink-0 mt-2" style={{ background: 'var(--color-marigold)' }} />}
@@ -189,7 +189,7 @@ export function NotificationPermissionPrompt() {
         <span className="text-xl shrink-0">🔔</span>
         <div>
           <p className="font-display font-bold text-sm" style={{ color: 'var(--color-bone)' }}>Notifications on karo?</p>
-          <p className="text-xs" style={{ color: 'rgba(245,240,232,0.6)' }}>
+          <p className="text-xs" style={{ color: 'rgba(var(--rt-bone-rgb),0.6)' }}>
             Squad ke kharche aur settlements ka pata chalega — even jab app band ho
           </p>
         </div>

@@ -43,7 +43,7 @@ export default function TripsPage() {
   };
 
   if (!trips) return (
-    <main className="flex min-h-screen flex-col" style={{ background:'#0e0c0a' }}>
+    <main className="flex min-h-screen flex-col" style={{ background:'var(--color-ink-950)' }}>
       <MarqueeTape /><div className="flex flex-1 items-center justify-center"><FunLoader /></div>
     </main>
   );
@@ -52,21 +52,21 @@ export default function TripsPage() {
   const completed = trips.filter(t => t.status !== 'active');
 
   return (
-    <main className="min-h-screen pb-24" style={{ background:'#0e0c0a' }}>
+    <main className="min-h-screen pb-24" style={{ background:'var(--color-ink-950)' }}>
       <MarqueeTape />
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5">
-        <button onClick={() => nav(`/app/squad/${id}`)} className="flex items-center gap-2 text-sm font-bold" style={{ color:'rgba(245,240,232,0.6)' }}>
+        <button onClick={() => nav(`/app/squad/${id}`)} className="flex items-center gap-2 text-sm font-bold" style={{ color:'rgba(var(--rt-bone-rgb),0.6)' }}>
           <ArrowLeft className="h-4 w-4" /> Back to Squad
         </button>
-        <h1 className="font-display font-extrabold" style={{ color:'#f5f0e8' }}>🧳 Trips</h1>
+        <h1 className="font-display font-extrabold" style={{ color:'var(--color-bone)' }}>🧳 Trips</h1>
       </nav>
 
       <section className="mx-auto max-w-5xl px-5">
         {trips.length === 0 ? (
           <div className="bcard bcard-yellow p-12 text-center">
             <motion.p animate={{ y:[0,-10,0] }} transition={{ repeat:Infinity, duration:2.2 }} className="text-5xl">🧳</motion.p>
-            <h2 className="mt-4 font-display text-lg font-extrabold" style={{ color:'#f5f0e8' }}>Koi trip nahi abhi tak!</h2>
-            <p className="mx-auto mt-2 max-w-xs text-sm" style={{ color:'rgba(245,240,232,0.5)' }}>Goa, Manali, ya simple weekend outing — sab trip mein group karo.</p>
+            <h2 className="mt-4 font-display text-lg font-extrabold" style={{ color:'var(--color-bone)' }}>Koi trip nahi abhi tak!</h2>
+            <p className="mx-auto mt-2 max-w-xs text-sm" style={{ color:'rgba(var(--rt-bone-rgb),0.5)' }}>Goa, Manali, ya simple weekend outing — sab trip mein group karo.</p>
             <button onClick={() => { initSound(); play('open'); setShowCreate(true); }} className="bbtn mt-5">🧳 Pehla Trip Banao</button>
           </div>
         ) : (
@@ -100,7 +100,7 @@ export default function TripsPage() {
         <form onSubmit={create} className="space-y-4">
           <Input label="Trip ka naam" placeholder="Goa Trip 2026" value={name} onChange={(e) => setName(e.target.value)} required />
           <label className="block">
-            <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider" style={{ color:'rgba(245,240,232,0.5)' }}>Vibe</span>
+            <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider" style={{ color:'rgba(var(--rt-bone-rgb),0.5)' }}>Vibe</span>
             <div className="flex gap-2 flex-wrap">{EMOJIS.map((e) => (
               <button key={e} type="button" onClick={() => setEmoji(e)}
                 className={`rounded-xl p-2.5 text-xl transition active:scale-90 border-2 ${emoji===e?'border-aqua bg-aqua/20':'border-bone/20 bg-ink-800'}`}>{e}</button>
@@ -125,9 +125,9 @@ function TripCard({ trip, idx, squadId, faded }: { trip: Trip; idx: number; squa
         <span className="text-3xl">{trip.emoji}</span>
         {trip.status !== 'active' && <span className="sticker" style={{ opacity:0.7 }}>{trip.status.toUpperCase()}</span>}
       </div>
-      <h3 className="font-display font-extrabold" style={{ color:'#f5f0e8' }}>{trip.name}</h3>
-      <p className="font-display text-xl font-extrabold mt-1" style={{ color:'#f5a623' }}>{toRupees(Number(trip.total_spend))}</p>
-      <div className="mt-3 flex items-center gap-4 text-xs" style={{ color:'rgba(245,240,232,0.5)' }}>
+      <h3 className="font-display font-extrabold" style={{ color:'var(--color-bone)' }}>{trip.name}</h3>
+      <p className="font-display text-xl font-extrabold mt-1" style={{ color:'var(--color-marigold)' }}>{toRupees(Number(trip.total_spend))}</p>
+      <div className="mt-3 flex items-center gap-4 text-xs" style={{ color:'rgba(var(--rt-bone-rgb),0.5)' }}>
         <span className="flex items-center gap-1"><Receipt className="h-3 w-3" /> {trip.expense_count}</span>
         <span className="flex items-center gap-1"><Camera className="h-3 w-3" /> {trip.photo_count}</span>
       </div>
