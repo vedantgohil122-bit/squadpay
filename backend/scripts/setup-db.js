@@ -143,6 +143,39 @@ async function runMigrations() {
   )`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_recurring_due ON recurring_expenses (squad_id) WHERE active = TRUE`);
   console.log('   • Recurring expenses ready 🔁');
+
+  // v6.7: live treasury + online payment gateway
+  await pool.query(`ALTER TABLE treasury ADD COLUMN IF NOT EXISTS contribution_target BIGINT`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS payment_orders (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    squad_id UUID NOT NULL REFERENCES squads(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id),
+    purpose TEXT NOT NULL DEFAULT 'treasury_contribution',
+    amount BIGINT NOT NULL CHECK (amount > 0),
+    currency TEXT NOT NULL DEFAULT 'INR',
+    provider TEXT NOT NULL DEFAULT 'razorpay',
+    provider_order_id TEXT NOT NULL UNIQUE,
+    status TEXT NOT NULL DEFAULT 'created' CHECK (status IN ('created','attempted','paid','failed','cancelled')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS payment_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    provider TEXT NOT NULL,
+    provider_event_id TEXT NOT NULL,
+    event_type TEXT NOT NULL,
+    payment_order_id UUID REFERENCES payment_orders(id),
+    payload JSONB NOT NULL,
+    processed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (provider, provider_event_id)
+  )`);
+  await pool.query(`ALTER TABLE treasury_transactions ADD COLUMN IF NOT EXISTS payment_order_id UUID REFERENCES payment_orders(id)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_payment_orders_user ON payment_orders (squad_id, user_id)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_payment_orders_status ON payment_orders (status) WHERE status IN ('created','attempted')`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_payment_events_order ON payment_events (payment_order_id)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_treasury_txns_order ON treasury_transactions (payment_order_id) WHERE payment_order_id IS NOT NULL`);
+  console.log('   • Live payment gateway tables ready 💳');
 }
 
 async function main() {

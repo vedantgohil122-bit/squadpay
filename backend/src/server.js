@@ -5,6 +5,9 @@
 // rate limit), then gets directed to the right room (routes).
 // ============================================================
 import express from 'express';
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import jwt from 'jsonwebtoken';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -22,7 +25,10 @@ import personalRoutes from './routes/personal.routes.js';
 import memoryRoutes from './routes/memory.routes.js';
 import recurringRoutes from './routes/recurring.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
+import { query } from './config/db.js';
+import { setIO } from './realtime.js';
 
 dotenv.config();
 
@@ -74,7 +80,15 @@ const authLimiter = rateLimit({
 app.use('/api/auth', authLimiter);
 
 // ---- Body parsing ----
-app.use(express.json({ limit: '1mb' }));
+// The `verify` callback captures the raw, unparsed request body onto
+// req.rawBody alongside the normal JSON parse. This ONLY matters for the
+// Razorpay webhook route (payment.controller.js razorpayWebhook), whose
+// signature is an HMAC over the exact raw bytes — computing it from
+// JSON.stringify(req.body) instead would silently produce a signature
+// that never matches, since key order / whitespace isn't guaranteed to
+// round-trip identically. Capturing it here (once, globally) is simpler
+// and less error-prone than trying to special-case body parsing per route.
+app.use(express.json({ limit: '1mb', verify: (req, res, buf) => { req.rawBody = buf; } }));
 
 // ---- Routes ----
 app.use('/api/health', healthRoutes);
@@ -89,12 +103,58 @@ app.use('/api/personal', personalRoutes);
 app.use('/api/memories', memoryRoutes);
 app.use('/api/recurring', recurringRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/payments', paymentRoutes);
 app.use('/uploads', express.static('uploads'));
 
 // ---- 404 + central error handling (always LAST) ----
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+// Socket.IO needs the raw HTTP server (not just the Express app) to
+// attach to, since WebSocket upgrades happen at the HTTP layer below
+// Express's own routing.
+const httpServer = http.createServer(app);
+
+const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: [process.env.CLIENT_URL || 'http://localhost:5173', /\.vercel\.app$/, /localhost/],
+    credentials: true,
+  },
+});
+setIO(io);
+
+// Every socket connection must present the same JWT used for normal API
+// calls — there's no separate, weaker auth path for realtime.
+io.use((socket, next) => {
+  try {
+    const token = socket.handshake.auth?.token;
+    if (!token) return next(new Error('Login required'));
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    socket.userId = payload.sub;
+    next();
+  } catch {
+    next(new Error('Session expired'));
+  }
+});
+
+io.on('connection', (socket) => {
+  // Client asks to join a specific squad's room — verified against real
+  // membership before joining, so a socket can never listen in on a
+  // squad this user isn't actually part of.
+  socket.on('join-squad', async (squadId) => {
+    try {
+      if (!squadId) return;
+      const { rows } = await query(
+        `SELECT 1 FROM squad_members WHERE squad_id=$1 AND user_id=$2 AND status='active'`,
+        [squadId, socket.userId]
+      );
+      if (rows.length) socket.join(`squad:${squadId}`);
+    } catch { /* non-fatal — worst case, this socket just doesn't get live updates */ }
+  });
+
+  socket.on('leave-squad', (squadId) => { if (squadId) socket.leave(`squad:${squadId}`); });
+});
+
+httpServer.listen(PORT, () => {
   console.log(`🚀 SquadPay API running on http://localhost:${PORT}`);
 });

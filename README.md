@@ -35,6 +35,165 @@ so this was a backend-only fix.
 Without these two variables, avatar/photo uploads return a clear error —
 everything else in the app is unaffected.
 
+## 💳 v6.7 — Live Treasury + Online Payment System (Razorpay)
+
+Real money-in via a real payment gateway, verified server-side, broadcast
+live to everyone viewing the Treasury. Existing manual/cash contribution
+logging is untouched — this adds a second, parallel path into the *same*
+ledger, it doesn't replace anything.
+
+**Core rule everything here is built around: the frontend never credits
+money.** Razorpay's checkout reporting "success" to the browser is treated
+as a hint, not a fact — only a signature-verified webhook, hitting the
+backend directly, ever updates a treasury balance.
+
+### Files changed / added
+
+**Backend — new:**
+- `src/services/payment/index.js` — provider factory/interface (swap providers by adding one file, not touching the controller)
+- `src/services/payment/razorpay.provider.js` — the concrete Razorpay implementation
+- `src/controllers/payment.controller.js` — order creation, webhook handler, refunds, contribution tracking
+- `src/routes/payment.routes.js`
+- `src/realtime.js` — shared Socket.IO instance holder
+
+**Backend — modified:**
+- `src/server.js` — HTTP server now created explicitly (Socket.IO needs it), JWT-authenticated socket connections, `express.json()` now captures the raw body (needed for webhook signature verification), payment routes mounted
+- `src/db/schema.sql`, `scripts/setup-db.js` — new tables + column additions (below)
+- `.env.example` — Razorpay + webhook setup instructions
+
+**Frontend — new:**
+- `src/lib/socket.ts` — shared Socket.IO client connection
+- `src/lib/razorpay.ts` — loads Razorpay's Checkout script, thin wrapper around opening it
+
+**Frontend — modified:**
+- `src/pages/TreasuryPage.tsx` — "Pay Online" flow, live balance via socket, Targets tab (contribution tracking), History tab gained search/filter + admin refund action
+
+### Database changes
+
+No existing table was dropped or restructured — only additions:
+- **`payment_orders`** (new) — one row per "Pay ₹X" attempt. `provider_order_id` is `UNIQUE`, the anchor idempotency depends on.
+- **`payment_events`** (new) — immutable webhook audit log. `(provider, provider_event_id)` is `UNIQUE` — this is what actually stops a re-delivered webhook from crediting money twice.
+- **`treasury`** — added `contribution_target` (nullable, paise)
+- **`treasury_transactions`** — added `payment_order_id` (nullable FK), so every online-payment-sourced ledger entry traces back to its order
+
+**Deliberately NOT added:** a `member_contributions` table. Per-member paid/required/remaining is fully derivable from `SUM(treasury_transactions) GROUP BY user_id` against `treasury.contribution_target` — storing it separately would just be a cache that could drift out of sync with the real ledger, which is exactly the kind of duplicate money-tracking system the brief said to avoid.
+
+### API endpoints
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| POST | `/api/payments/treasury/create-order` | JWT | Creates a `payment_orders` row + Razorpay order |
+| POST | `/api/payments/webhook/razorpay` | Signature (no JWT) | Razorpay calls this directly, server-to-server |
+| GET | `/api/payments/treasury/order/:orderId/status` | JWT | Fallback poll while waiting for the webhook |
+| GET | `/api/payments/treasury/:squadId/contributions` | JWT | Derived paid/required/remaining per member |
+| POST | `/api/payments/treasury/:squadId/contribution-target` | JWT, admin | Sets the per-member target |
+| POST | `/api/payments/treasury/refund/:transactionId` | JWT, admin | Refunds a verified online payment |
+
+### Payment flow
+
+```
+User taps "Pay ₹500"
+  → POST /payments/treasury/create-order (amount validated server-side)
+  → payment_orders row created (status='created')
+  → Razorpay order created via their API
+  → Frontend opens Razorpay Checkout with the order id
+  → User pays (UPI/card/netbanking)
+  → Checkout reports "success" to the browser — NOT trusted, just a hint
+  → Frontend shows "Verifying payment..." and starts polling order status
+  → [see Webhook flow below — this is what actually credits anything]
+  → Once payment_orders.status flips to 'paid' (via webhook OR the socket
+    event lands first), the modal closes and the balance is already live
+```
+
+### Webhook flow
+
+```
+Razorpay → POST /api/payments/webhook/razorpay (raw body + x-razorpay-signature header)
+  1. Verify HMAC signature over the RAW body against RAZORPAY_WEBHOOK_SECRET
+     → invalid? 400, stop. Nothing below runs.
+  2. INSERT INTO payment_events (provider_event_id UNIQUE) ON CONFLICT DO NOTHING
+     → already processed this exact event? Return 200, stop. (idempotency)
+  3. Look up payment_orders by provider_order_id, lock the row (FOR UPDATE)
+     → already 'paid'? stop. (second idempotency layer)
+  4. Verify the PAID AMOUNT matches what the order was created for
+     → mismatch? mark order 'failed', stop. Never trust the webhook's
+       amount blindly either.
+  5. BEGIN transaction:
+     - payment_orders.status = 'paid'
+     - treasury.balance += amount
+     - INSERT treasury_transactions (type='deposit', payment_order_id=...)
+     - INSERT contributions (keeps existing wallet stats accurate)
+     COMMIT
+  6. Outside the transaction (money is already safely committed):
+     - notify the payer + the rest of the squad
+     - award XP
+     - broadcastToSquad(squadId, 'treasury:update', {...})
+```
+
+### Real-time event flow
+
+```
+TreasuryPage mounts
+  → connects to Socket.IO (JWT sent at handshake — same token as every API call)
+  → emits 'join-squad' with the squad id
+  → server verifies real membership before letting the socket join that room
+       (a socket can never listen in on a squad it isn't actually in)
+
+Webhook confirms a payment
+  → server emits 'treasury:update' to room `squad:{squadId}`
+  → every connected member's TreasuryPage merges the update directly into
+    state (balance + prepend the transaction) — no refetch, no refresh
+```
+
+**Render free-tier note:** WebSockets work fine on Render's free tier, but
+the free tier spins the server down after ~15 min idle. A dropped socket
+just reconnects automatically after the cold start (Socket.IO's client
+does this natively) — usually 30-50s. The order-status poll and the
+existing 30s notification-bell poll both serve as fallbacks for that gap.
+
+### Environment variables required
+
+```
+RAZORPAY_KEY_ID=          # from Razorpay Dashboard -> Settings -> API Keys
+RAZORPAY_KEY_SECRET=      # same place — keep this one server-side only, never send to frontend
+RAZORPAY_WEBHOOK_SECRET=  # set when you add the webhook URL in their dashboard
+```
+All three optional — omit any and online payments cleanly disable
+themselves (manual/cash logging is unaffected). See `.env.example` for the
+exact dashboard steps.
+
+### Security considerations
+
+- **No card/UPI/CVV data ever touches this backend** — Razorpay's Checkout handles all of that on their own hosted, PCI-compliant page. This app only ever sees an order id and a payment id.
+- **Amount validated server-side at order creation** (min ₹1, max ₹1,00,000 sanity ceiling) — the amount the client sends is a request, not a fact.
+- **Webhook signature verified against the raw request body** using `crypto.timingSafeEqual` (not a plain `===`, which is vulnerable to timing attacks on the comparison itself).
+- **Idempotency at the database level**, not just application logic — two `UNIQUE` constraints (`payment_orders.provider_order_id`, `payment_events(provider, provider_event_id)`) mean a duplicate can't get through even under concurrent requests.
+- **Squad membership checked on every endpoint** — contributions, order creation, refunds all verify `req.user.id` is an active member of the squad in question before doing anything.
+- **Refunds are admin-only**, verified via the same role check used everywhere else in the app.
+- **Sockets authenticate with the same JWT** as REST calls — no separate, weaker realtime auth path — and `join-squad` re-verifies membership server-side rather than trusting whatever squad id the client asks to join.
+
+### Testing steps (test mode, zero real money)
+
+1. Add your **Test Mode** keys to `backend/.env`, restart the backend.
+2. Locally, use a tool like `ngrok` to expose your backend so Razorpay's test webhooks can reach it: `ngrok http 5000`, then use that URL + `/api/payments/webhook/razorpay` in the Razorpay dashboard's webhook settings.
+3. Open a squad's Treasury page, tap **Pay Online**, enter an amount.
+4. Razorpay's checkout opens — use their [documented test card/UPI numbers](https://razorpay.com/docs/payments/payments/test-card-upi-details/) (e.g. card `4111 1111 1111 1111`, any future expiry, any CVV).
+5. Confirm: the modal shows "Verifying...", then closes on its own once the webhook lands; the balance updates without a page refresh; a notification arrives.
+6. Open the same squad in a second browser/incognito window (different account) — confirm it also updates live, without refreshing.
+7. Test a **failed** payment (Razorpay's test cards include ones that deliberately decline) — confirm the order shows 'failed' and nothing gets credited.
+8. As admin, test **Set Target**, then check the Targets tab shows PAID/PENDING/NOT PAID correctly across members.
+9. As admin, test **Refund** on a completed online payment from the History tab — confirm the balance decreases and the original transaction stays in history untouched (a new `refund` row appears instead).
+
+### Deployment changes — Vercel + Render
+
+**Render (backend):**
+- Add the three `RAZORPAY_*` env vars in the dashboard's Environment tab
+- Add the production webhook URL in Razorpay's dashboard once deployed: `https://your-actual-render-url.onrender.com/api/payments/webhook/razorpay`
+- No Render service-type change needed — Socket.IO runs on the same HTTP server as the existing Express app, same port, same "Web Service" type already in use
+- Run `npm run setup` once against the live database for the new tables
+
+**Vercel (frontend):** no configuration changes needed — the socket connection and Razorpay Checkout both talk directly to the Render backend's origin, the same way every other API call already does. A normal redeploy from the git push is sufficient.
+
 ## 🌗 v6.6 — dark / light mode
 
 **Important context on how this was built:** the `arena` branch this was

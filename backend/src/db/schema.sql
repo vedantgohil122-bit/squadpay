@@ -287,6 +287,7 @@ CREATE TABLE treasury (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   squad_id   UUID NOT NULL UNIQUE REFERENCES squads(id) ON DELETE CASCADE,
   balance    BIGINT NOT NULL DEFAULT 0 CHECK (balance >= 0),
+  contribution_target BIGINT,  -- v6.7: optional, PAISE — what each member is asked to pay in
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -316,6 +317,7 @@ CREATE TABLE treasury_transactions (
   amount      BIGINT NOT NULL CHECK (amount > 0),
   description TEXT NOT NULL DEFAULT '',
   expense_id  UUID REFERENCES expenses(id) ON DELETE SET NULL,
+  payment_order_id UUID REFERENCES payment_orders(id),  -- v6.7: set when this deposit came from a verified online payment
   user_id     UUID REFERENCES users(id),
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -402,6 +404,52 @@ CREATE TABLE recurring_expenses (
 );
 
 -- ------------------------------------------------------------
+-- 24. PAYMENT_ORDERS — v6.7: one row per "Pay ₹X to Treasury"
+-- attempt, created BEFORE the user ever sees a checkout screen.
+-- provider_order_id is UNIQUE — this is the idempotency anchor for
+-- the whole payment flow. Status only ever moves forward
+-- (created -> attempted -> paid/failed/cancelled); "paid" is set
+-- ONLY by the webhook handler after signature verification, never
+-- by anything the frontend reports.
+-- ------------------------------------------------------------
+CREATE TABLE payment_orders (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  squad_id          UUID NOT NULL REFERENCES squads(id) ON DELETE CASCADE,
+  user_id           UUID NOT NULL REFERENCES users(id),
+  purpose           TEXT NOT NULL DEFAULT 'treasury_contribution',
+  amount            BIGINT NOT NULL CHECK (amount > 0),   -- PAISE, validated server-side at creation
+  currency          TEXT NOT NULL DEFAULT 'INR',
+  provider          TEXT NOT NULL DEFAULT 'razorpay',
+  provider_order_id TEXT NOT NULL UNIQUE,
+  status            TEXT NOT NULL DEFAULT 'created'
+                    CHECK (status IN ('created','attempted','paid','failed','cancelled')),
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ------------------------------------------------------------
+-- 25. PAYMENT_EVENTS — immutable webhook audit log. Every webhook
+-- delivery gets a row here BEFORE any processing happens, keyed on
+-- provider_event_id UNIQUE — a duplicate webhook delivery (which
+-- payment providers do on purpose, as a reliability guarantee) hits
+-- this constraint and is skipped, so a payment can never be credited
+-- twice from a re-sent webhook. This table is never updated or
+-- deleted — it's the audit trail proving what the provider actually
+-- told us and when.
+-- ------------------------------------------------------------
+CREATE TABLE payment_events (
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider           TEXT NOT NULL,
+  provider_event_id  TEXT NOT NULL,
+  event_type         TEXT NOT NULL,
+  payment_order_id   UUID REFERENCES payment_orders(id),
+  payload            JSONB NOT NULL,
+  processed_at       TIMESTAMPTZ,
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (provider, provider_event_id)
+);
+
+-- ------------------------------------------------------------
 -- INDEXES — the queries we will run thousands of times
 -- ------------------------------------------------------------
 CREATE INDEX idx_members_squad          ON squad_members (squad_id) WHERE status = 'active';
@@ -421,6 +469,10 @@ CREATE INDEX idx_treasury_txns_squad    ON treasury_transactions (squad_id, crea
 CREATE INDEX idx_personal_expenses_user ON personal_expenses (user_id, expense_date DESC);
 CREATE INDEX idx_push_subs_user         ON push_subscriptions (user_id);
 CREATE INDEX idx_recurring_due          ON recurring_expenses (squad_id) WHERE active = TRUE;
+CREATE INDEX idx_payment_orders_user    ON payment_orders (squad_id, user_id);
+CREATE INDEX idx_payment_orders_status  ON payment_orders (status) WHERE status IN ('created','attempted');
+CREATE INDEX idx_payment_events_order   ON payment_events (payment_order_id);
+CREATE INDEX idx_treasury_txns_order    ON treasury_transactions (payment_order_id) WHERE payment_order_id IS NOT NULL;
 -- Partial index matching the exact shape of the verify-OTP query: it always
 -- filters WHERE consumed_at IS NULL, so a partial index on just the unconsumed
 -- rows is both smaller and a more precise match than indexing everything.
