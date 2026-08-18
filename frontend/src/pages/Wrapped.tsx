@@ -138,7 +138,7 @@ export default function Wrapped() {
             <div className="w-full max-w-sm">
               <motion.div initial={{ opacity:0, y:20, rotate:-2 }} animate={{ opacity:1, y:0, rotate:0 }} transition={{ delay:0.2, type:'spring' }}
                 className="overflow-hidden rounded-3xl shadow-2xl" style={{ border:'4px solid rgba(255,255,255,0.3)' }}>
-                <img src={assetUrl(slide.photo.url)} alt="memory" className="aspect-square w-full object-cover" />
+                <img src={assetUrl(slide.photo.url)} alt="memory" decoding="async" className="aspect-square w-full object-cover" />
               </motion.div>
               <motion.div initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.5 }} className="mt-5 space-y-1">
                 <p className="text-xs font-bold uppercase tracking-widest text-white/60">📸 {slide.photo.uploaderName} ki memory</p>

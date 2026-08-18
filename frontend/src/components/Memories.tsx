@@ -143,7 +143,7 @@ function MemoryCard({ m, meId, isAdmin, onReact, onDelete, onChanged }: {
             <p className="text-2xl animate-pulse">📸</p>
           </div>
         )}
-        <img src={assetUrl(m.url)} alt={m.caption || 'memory'} onLoad={() => setImgLoaded(true)}
+        <img src={assetUrl(m.url)} alt={m.caption || 'memory'} loading="lazy" decoding="async" onLoad={() => setImgLoaded(true)}
           className={`aspect-square w-full object-cover transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`} />
         {(m.uploaded_by === meId || isAdmin) && (
           <button onClick={() => onDelete(m.id)}

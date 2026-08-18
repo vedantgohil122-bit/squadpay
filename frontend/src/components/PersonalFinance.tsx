@@ -270,7 +270,7 @@ export default function PersonalFinance(){
           <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-40" style={{background:'rgba(0,0,0,0.75)'}} onClick={()=>setShowAdd(false)}/>
           <motion.div initial={{y:'100%'}} animate={{y:0}} exit={{y:'100%'}} transition={{type:'spring',damping:30,stiffness:340}}
             className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-lg rounded-t-3xl"
-            style={{background:'var(--color-ink-900)',border:'2px solid rgba(var(--rt-bone-rgb),0.15)',borderBottom:'none',maxHeight:'85vh',overflowY:'auto'}}>
+            style={{background:'var(--color-ink-900)',border:'2px solid rgba(var(--rt-bone-rgb),0.15)',borderBottom:'none',maxHeight:'85vh',overflowY:'auto',paddingBottom:'env(safe-area-inset-bottom)'}}>
             <div className="flex justify-center pt-3 pb-1"><div className="h-1 w-10 rounded-full" style={{background:'rgba(var(--rt-bone-rgb),0.2)'}}/></div>
             <div className="flex items-center justify-between px-5 pt-2 pb-4">
               <div><h2 className="font-display text-lg font-extrabold" style={{color:'var(--color-bone)'}}>Personal Kharcha 💸</h2><p className="text-xs" style={{color:'rgba(var(--rt-bone-rgb),0.4)'}}>Sirf tera — squad nahi dekhega</p></div>

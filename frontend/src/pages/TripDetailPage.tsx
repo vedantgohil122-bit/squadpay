@@ -236,7 +236,7 @@ export default function TripDetailPage() {
             <p className="sticker sticker-pink mb-3">Trip Memories</p>
             <div className="grid grid-cols-3 gap-2">
               {photos.map((p) => (
-                <img key={p.id} src={assetUrl(p.url)} alt={p.caption||'memory'} className="aspect-square w-full rounded-xl object-cover" style={{ border:'2px solid rgba(var(--rt-bone-rgb),0.1)' }} />
+                <img key={p.id} src={assetUrl(p.url)} alt={p.caption||'memory'} loading="lazy" decoding="async" className="aspect-square w-full rounded-xl object-cover" style={{ border:'2px solid rgba(var(--rt-bone-rgb),0.1)' }} />
               ))}
             </div>
           </div>
@@ -253,7 +253,7 @@ export default function TripDetailPage() {
             <motion.div initial={{ y:'100%' }} animate={{ y:0 }} exit={{ y:'100%' }}
               transition={{ type:'spring', damping:30, stiffness:340 }}
               className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-lg rounded-t-3xl"
-              style={{ background:'var(--color-ink-900)', border:'2px solid rgba(var(--rt-bone-rgb),0.15)', borderBottom:'none', maxHeight:'80vh', overflowY:'auto' }}>
+              style={{ background:'var(--color-ink-900)', border:'2px solid rgba(var(--rt-bone-rgb),0.15)', borderBottom:'none', maxHeight:'80vh', overflowY:'auto', paddingBottom:'env(safe-area-inset-bottom)' }}>
               <div className="flex justify-center pt-3 pb-1">
                 <div className="h-1 w-10 rounded-full" style={{ background:'rgba(var(--rt-bone-rgb),0.2)' }} />
               </div>
@@ -298,7 +298,7 @@ export default function TripDetailPage() {
 
       {/* TRIP KHARCHA LIKHO FAB — pre-locked to this trip */}
       <button onClick={() => { initSound(); play('open'); setShowAddExpense(true); }}
-        className="bbtn bbtn-pink fixed bottom-6 right-4 z-20 gap-2 px-5 py-3.5 text-sm shadow-2xl sm:right-6">
+        className="bbtn bbtn-pink fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 z-20 gap-2 px-5 py-3.5 text-sm shadow-2xl sm:right-6">
         <Plus className="h-5 w-5" /> Trip Kharcha Likho
       </button>
 

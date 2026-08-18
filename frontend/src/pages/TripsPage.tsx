@@ -92,7 +92,7 @@ export default function TripsPage() {
       </section>
 
       <button onClick={() => { initSound(); play('open'); setShowCreate(true); }}
-        className="bbtn bbtn-aqua fixed bottom-6 right-4 z-20 gap-2 px-5 py-3.5 text-sm shadow-2xl sm:right-6">
+        className="bbtn bbtn-aqua fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 z-20 gap-2 px-5 py-3.5 text-sm shadow-2xl sm:right-6">
         <Plus className="h-5 w-5" /> Naya Trip
       </button>
 

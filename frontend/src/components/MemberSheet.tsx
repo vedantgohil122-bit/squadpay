@@ -65,13 +65,13 @@ export default function MemberSheet({ open, onClose, squadId, userId, currentUse
       {open && (
         <>
           <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-            className="fixed inset-0 z-40" style={{ background:'rgba(0,0,0,0.75)', backdropFilter:'blur(4px)' }}
+            className="fixed inset-0 z-40" style={{ background:'rgba(0,0,0,0.8)' }}
             onClick={onClose} />
 
           <motion.div initial={{ y:'100%' }} animate={{ y:0 }} exit={{ y:'100%' }}
             transition={{ type:'spring', damping:30, stiffness:340 }}
             className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-lg"
-            style={{ background:C.card, borderTop:`2px solid ${C.border}`, borderLeft:`2px solid ${C.border}`, borderRight:`2px solid ${C.border}`, borderRadius:'1.5rem 1.5rem 0 0', maxHeight:'88vh', overflowY:'auto', color:C.bone }}>
+            style={{ background:C.card, borderTop:`2px solid ${C.border}`, borderLeft:`2px solid ${C.border}`, borderRight:`2px solid ${C.border}`, borderRadius:'1.5rem 1.5rem 0 0', maxHeight:'88vh', overflowY:'auto', color:C.bone, paddingBottom:'env(safe-area-inset-bottom)' }}>
 
             {/* Drag handle */}
             <div style={{ display:'flex', justifyContent:'center', paddingTop:'0.75rem', paddingBottom:'0.25rem' }}>

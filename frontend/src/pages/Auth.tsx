@@ -10,21 +10,21 @@ import OtpScreen from '../components/OtpScreen';
 // ── VALIDATORS ──────────────────────────────────────────────
 const validators = {
   name: (v: string) => {
-    if (!v.trim()) return 'Naam toh daalo bhai 😅';
+    if (!v.trim()) return 'Naam daalna zaroori hai';
     if (v.trim().length < 2) return 'Naam kam se kam 2 characters ka hona chahiye';
-    if (v.trim().length > 50) return 'Naam itna lamba? 50 se kam rakho 😄';
+    if (v.trim().length > 50) return 'Naam 50 characters se kam rakhein';
     return '';
   },
   email: (v: string) => {
-    if (!v.trim()) return 'Email toh daalo bhai 📧';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Ye email sahi nahi lag rahi — example@gmail.com jaisi honi chahiye';
+    if (!v.trim()) return 'Email daalna zaroori hai';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Ye email valid nahi lag raha — example@gmail.com jaisa hona chahiye';
     if (v.length > 100) return 'Email bahut lamba hai';
     return '';
   },
   password: (v: string) => {
-    if (!v) return 'Password toh daalo bhai 🔒';
+    if (!v) return 'Password daalna zaroori hai';
     if (v.length < 8) return `Password kam se kam 8 characters ka hona chahiye (abhi ${v.length} hai)`;
-    if (!/[A-Z]/.test(v) && !/[0-9]/.test(v)) return 'Password mein ek number ya capital letter add karo';
+    if (!/[A-Z]/.test(v) && !/[0-9]/.test(v)) return 'Password mein ek number ya capital letter add karein';
     return '';
   },
 };
@@ -37,10 +37,10 @@ function getStrength(p: string): { score: number; label: string; color: string }
   if (/[A-Z]/.test(p)) score++;
   if (/[0-9]/.test(p)) score++;
   if (/[^A-Za-z0-9]/.test(p)) score++;
-  if (score <= 1) return { score, label: 'Bahut weak 😬', color: 'var(--color-hot-pink)' };
-  if (score <= 2) return { score, label: 'Thoda theek 🤔', color: 'var(--color-marigold)' };
-  if (score <= 3) return { score, label: 'Acha hai 👍', color: 'var(--color-marigold)' };
-  return { score, label: 'Strong! 💪', color: 'var(--color-lime)' };
+  if (score <= 1) return { score, label: 'Weak', color: 'var(--color-hot-pink)' };
+  if (score <= 2) return { score, label: 'Fair', color: 'var(--color-marigold)' };
+  if (score <= 3) return { score, label: 'Good', color: 'var(--color-marigold)' };
+  return { score, label: 'Strong', color: 'var(--color-lime)' };
 }
 
 // ── FIELD COMPONENT ─────────────────────────────────────────
@@ -180,7 +180,7 @@ function AuthCard({ mode }: { mode: 'login' | 'register' }) {
   // ── Forgot password handlers ──
   const requestReset = async (e: FormEvent) => {
     e.preventDefault();
-    if (!resetEmail.trim()) { setResetError('Email toh daalo bhai'); return; }
+    if (!resetEmail.trim()) { setResetError('Email daalna zaroori hai'); return; }
     setResetError(''); setResetBusy(true);
     try {
       await api('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email: resetEmail }) });
@@ -222,22 +222,21 @@ function AuthCard({ mode }: { mode: 'login' | 'register' }) {
 
   return (
     <main className="flex min-h-screen flex-col" style={{ background: 'var(--color-ink-950)' }}>
-      <MarqueeTape />
       <div className="flex flex-1 items-center justify-center px-5 py-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
 
-          <Link to="/" className="mb-6 flex justify-center">
+          <Link to="/" className="mb-8 flex justify-center">
             <img src="/favicon.png" alt="SquadPay" className="h-10 w-auto" />
           </Link>
 
-          <div className="rounded-2xl p-7" style={{ background: 'var(--color-ink-900)', border: '2px solid #f5a623', boxShadow: '4px 4px 0 rgba(245,166,35,0.3)' }}>
+          <div className="rounded-2xl p-7" style={{ background: 'var(--color-ink-900)', border: '1px solid rgba(var(--rt-bone-rgb),0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)' }}>
             <AnimatePresence mode="wait">
 
               {/* ── SCREEN: CREDENTIALS ── */}
               {screen === 'credentials' && (
                 <motion.div key="credentials" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <h1 className="font-display text-xl font-extrabold" style={{ color: 'var(--color-bone)' }}>
-                    {mode === 'login' ? 'Log In' : 'Squad mein aao! 🎉'}
+                    {mode === 'login' ? 'Log In' : 'Account Banao'}
                   </h1>
                   <p className="mt-1 text-xs" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>
                     {mode === 'login' ? 'Squad tumhara intezaar kar rahi hai.' : 'Email OTP se secure — 30 second mein hisaab shuru.'}
@@ -299,7 +298,7 @@ function AuthCard({ mode }: { mode: 'login' | 'register' }) {
                         border: '2px solid rgba(0,0,0,0.2)',
                         cursor: isValid ? 'pointer' : 'not-allowed',
                       }}>
-                      {busy ? 'Ek sec...' : mode === 'login' ? 'Code bhejo →' : 'Account banao →'}
+                      {busy ? 'Wait karo...' : mode === 'login' ? 'Code bhejo →' : 'Account banao →'}
                     </button>
 
                     {mode === 'register' && (
@@ -344,7 +343,7 @@ function AuthCard({ mode }: { mode: 'login' | 'register' }) {
                   <button onClick={backToCredentials} className="mb-4 text-xs font-bold" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>
                     ← Back
                   </button>
-                  <h2 className="font-display text-lg font-extrabold" style={{ color: 'var(--color-bone)' }}>Password reset karo 🔒</h2>
+                  <h2 className="font-display text-lg font-extrabold" style={{ color: 'var(--color-bone)' }}>Password Reset Karo</h2>
                   <p className="mt-1 text-xs mb-5" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>Apna email daalo, code bhej denge.</p>
                   <form onSubmit={requestReset} className="space-y-4">
                     <Field label="Email" type="email" value={resetEmail} placeholder="tum@gmail.com"
@@ -381,7 +380,7 @@ function AuthCard({ mode }: { mode: 'login' | 'register' }) {
                       <button onClick={() => setScreen('forgot-otp')} className="mb-4 text-xs font-bold" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>
                         ← Back
                       </button>
-                      <h2 className="font-display text-lg font-extrabold" style={{ color: 'var(--color-bone)' }}>Naya password banao 🔑</h2>
+                      <h2 className="font-display text-lg font-extrabold" style={{ color: 'var(--color-bone)' }}>Naya Password Banao</h2>
                       <p className="mt-1 text-xs mb-5" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>Code verify ho gaya — ab naya password set karo.</p>
                       <form onSubmit={submitNewPassword} className="space-y-4">
                         <Field label="Naya Password" type="password" value={newPassword} placeholder="Min 8 characters"

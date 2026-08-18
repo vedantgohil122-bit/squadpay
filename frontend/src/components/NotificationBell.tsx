@@ -87,7 +87,7 @@ export function NotificationBell({ squadId }: { squadId?: string }) {
                 borderRadius: '1.5rem 1.5rem 0 0',
                 maxHeight: '80vh',
                 overflow: 'hidden',
-                boxShadow: '0 -8px 30px rgba(0,0,0,0.4)',
+                boxShadow: '0 -8px 30px rgba(0,0,0,0.4)', paddingBottom: 'env(safe-area-inset-bottom)',
               }}
             >
               {/* Drag handle — mobile only, signals "swipe down to close" */}

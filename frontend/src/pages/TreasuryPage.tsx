@@ -462,7 +462,7 @@ try {
       </section>
 
       {/* FAB — online payment is the primary path now, manual/cash logging stays as a secondary option */}
-      <div className="fixed bottom-6 right-4 z-20 flex flex-col items-end gap-2 sm:right-6">
+      <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 z-20 flex flex-col items-end gap-2 sm:right-6">
         <button onClick={() => { initSound(); play('open'); setShowPay(true); setPayStatus('idle'); setPayError(''); }}
           className="bbtn bbtn-lime gap-2 px-5 py-3.5 text-sm shadow-2xl">
           <CreditCard className="h-5 w-5" /> Pay Online

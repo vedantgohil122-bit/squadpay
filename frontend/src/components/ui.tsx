@@ -43,7 +43,7 @@ export const Input = ({ label, ...props }: { label: string } & React.InputHTMLAt
 export const Modal = ({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) => {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/85 p-4" onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.92, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         className="bcard bcard-yellow my-8 w-full max-w-md max-h-[85vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
         <div className="mb-5 flex items-center justify-between">
@@ -58,7 +58,7 @@ export const Modal = ({ open, onClose, title, children }: { open: boolean; onClo
 
 /* ── AVATAR ── */
 export const Avatar = ({ url, name, size = 'h-9 w-9' }: { url?: string | null; name: string; size?: string }) =>
-  url ? <img src={assetUrl(url)} alt={name} className={`${size} rounded-full border-2 border-bone/20 bg-ink-800`} />
+  url ? <img src={assetUrl(url)} alt={name} loading="lazy" decoding="async" className={`${size} rounded-full border-2 border-bone/20 bg-ink-800`} />
       : <div className={`${size} flex items-center justify-center rounded-full border-2 border-marigold bg-ink-800 font-display font-extrabold text-marigold`} style={{ fontSize: '0.75rem' }}>{name[0]}</div>;
 
 /* ── SPINNER / FUN LOADER ── */

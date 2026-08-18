@@ -183,7 +183,7 @@ export default function SquadPage() {
       <MarqueeTape />
 
       {/* NAV */}
-      <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
+      <nav className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5">
         <button onClick={() => nav('/app')} className="flex items-center gap-2 text-sm font-bold" style={{ color:'rgba(var(--rt-bone-rgb),0.6)' }}>
           <ArrowLeft className="h-4 w-4" /> Squads
         </button>
@@ -249,7 +249,7 @@ export default function SquadPage() {
       </nav>
 
       {/* HEADER CARDS */}
-      <header className="mx-auto max-w-5xl px-4 sm:px-6">
+      <header className="mx-auto max-w-5xl px-5">
         <h1 className="font-display text-2xl font-extrabold sm:text-3xl" style={{ color:'var(--color-bone)' }}>
           {squad.emoji} {squad.name}
         </h1>
@@ -282,7 +282,7 @@ export default function SquadPage() {
       </header>
 
       {/* TABS — desktop */}
-      <div className="mx-auto mt-5 hidden max-w-5xl px-6 sm:block">
+      <div className="mx-auto mt-5 hidden max-w-5xl px-5 sm:block">
         <div className="flex gap-1 rounded-2xl p-1" style={{ background:'rgba(var(--rt-bone-rgb),0.05)', border:'2px solid rgba(var(--rt-bone-rgb),0.1)' }}>
           {TABS.map(([t, label, Icon, badge]) => (
             <button key={t} onClick={() => setTab(t as any)}
@@ -296,7 +296,7 @@ export default function SquadPage() {
       </div>
 
       {/* TABS — mobile bottom bar */}
-      <div className="fixed inset-x-0 bottom-0 z-30 sm:hidden" style={{ background:'rgba(14,12,10,0.95)', borderTop:'2px solid rgba(var(--rt-bone-rgb),0.12)', backdropFilter:'blur(12px)' }}>
+      <div className="fixed inset-x-0 bottom-0 z-30 sm:hidden" style={{ background:'rgba(14,12,10,0.98)', borderTop:'2px solid rgba(var(--rt-bone-rgb),0.12)', paddingBottom:'env(safe-area-inset-bottom)' }}>
         <div className="mx-auto flex max-w-md">
           {TABS.map(([t, label, Icon, badge]) => (
             <button key={t} onClick={() => { initSound(); play('tap'); setTab(t as any); }}
@@ -310,7 +310,7 @@ export default function SquadPage() {
       </div>
 
       {/* TAB CONTENT */}
-      <div className="mx-auto mt-5 max-w-5xl px-4 sm:px-6">
+      <div className="mx-auto mt-5 max-w-5xl px-5">
         <AnimatePresence mode="wait">
           <motion.div key={tab} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0}} transition={{duration:0.15}}>
             {tab==='overview'  && (
@@ -355,7 +355,7 @@ export default function SquadPage() {
 
       {/* FAB */}
       <button onClick={() => { initSound(); play('open'); setShowAdd(true); }}
-        className="bbtn bbtn-pink fixed bottom-20 right-4 z-20 gap-2 px-5 py-3.5 text-sm shadow-2xl sm:bottom-6 sm:right-6">
+        className="bbtn bbtn-pink fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-20 gap-2 px-5 py-3.5 text-sm shadow-2xl sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))] sm:right-6">
         <Plus className="h-5 w-5" /> Kharcha Likho
       </button>
 

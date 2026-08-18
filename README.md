@@ -35,6 +35,72 @@ so this was a backend-only fix.
 Without these two variables, avatar/photo uploads return a clear error —
 everything else in the app is unaffected.
 
+## 🎨 v6.7.2 — professional login page, mobile safe-area + alignment fixes
+
+**Login/Register page:**
+- Removed the meme marquee ticker that sat directly above the credential
+  form — a joke banner right above a login form was the single biggest
+  thing making it feel unprofessional
+- Card shadow: swapped the hard neo-brutalist offset shadow for a
+  standard soft drop shadow (`box-shadow: 0 8px 32px rgba(0,0,0,0.35)`),
+  border toned down from a thick marigold outline to a subtle 1px one
+- Copy cleanup: validator errors, password-strength labels ("Bahut weak
+  😬" → "Weak"), and screen headings had their per-sentence emoji and
+  meme-speak stripped. Kept the Hinglish language itself — that's the
+  app's identity — just dropped the "😅😬🎉" layer specifically on the
+  auth flow, since that's the one screen that reads as a serious
+  trust-building moment (entering a password) rather than a fun one.
+
+**Mobile safe-area handling (new — this genuinely didn't exist before):**
+- Added `viewport-fit=cover` to the viewport meta tag — required for
+  `env(safe-area-inset-*)` to resolve to anything other than 0
+- Every fixed bottom element in the app (5 FAB buttons, 4 slide-up bottom
+  sheets, the mobile tab bar) now respects the phone's safe area — on a
+  notched iPhone, these no longer sit flush against or under the home
+  indicator
+
+**Two more backdrop-filter instances found and removed** (the mobile-lag
+sweep in v6.7.1 used a hyphenated-CSS-property search, which missed
+these two since they're written as camelCase `backdropFilter` in inline
+JS style objects): the member-profile sheet's overlay, and — more
+significantly — the **persistent mobile bottom tab bar**, which was
+blurring continuously on every squad page view, not just briefly during
+a modal. Both backgrounds were already 90%+ opaque, so removing the blur
+costs nothing visually while cutting a real, continuous compositing cost.
+
+**Alignment consistency:** every page in the app uses `px-5` horizontal
+edge padding except `SquadPage.tsx`, which used `px-4` on mobile /
+`sm:px-6` on desktop — meaning content shifted slightly every time you
+navigated from Dashboard into a squad. Standardized to `px-5` everywhere.
+
+## 📱 v6.7.1 — mobile performance fix
+
+You reported the app feeling laggy on phone specifically. Found three real,
+concrete causes rather than guessing — no visual redesign, all under-the-
+hood:
+
+1. **Zero code-splitting.** Every route was bundled into one 533KB file —
+   opening the app just to check your Dashboard downloaded and parsed
+   Treasury's Socket.IO/Razorpay integration, Wrapped's animation-heavy
+   slideshow, and the BakraWheel game too, every single time. Routes past
+   the entry pages (Dashboard, SquadPage, Wrapped, TreasuryPage, TripsPage,
+   TripDetailPage) are now lazy-loaded per-page via `React.lazy` +
+   `Suspense`. Main bundle: **533KB → 326KB (39% smaller)**, verified in
+   the actual build output — everything else now fetches on demand.
+2. **`backdrop-blur-sm` on the shared Modal component.** `backdrop-filter`
+   is a known-expensive GPU operation on mobile, and this Modal opens
+   constantly — every add-expense, every confirmation dialog, every
+   profile edit. Removed the blur, kept the dark dimming overlay.
+3. **No lazy-loading on any photo.** Memory wall photos, trip photos, and
+   avatars were all downloading/decoding immediately regardless of
+   whether they were on-screen. Added `loading="lazy" decoding="async"`
+   across all of them — a Memories wall with many photos no longer forces
+   the browser to decode everything upfront.
+
+(Checked `.glass`/`backdrop-filter` usage elsewhere first — it turned out
+unused everywhere except that one Modal, so this wasn't a wider sweep,
+just the one real instance.)
+
 ## 💳 v6.7 — Live Treasury + Online Payment System (Razorpay)
 
 Real money-in via a real payment gateway, verified server-side, broadcast

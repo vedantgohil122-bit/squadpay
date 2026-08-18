@@ -1,6 +1,6 @@
 {
   "name": "squadpay-backend",
-  "version": "6.7.0",
+  "version": "6.7.2",
   "description": "SquadPay API — social expense tracking for friend squads",
   "type": "module",
   "main": "src/server.js",
