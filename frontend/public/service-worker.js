@@ -11,7 +11,7 @@
 // repeat loads are instant).
 // ============================================================
 
-const CACHE_NAME = 'squadpay-shell-v1';
+const CACHE_NAME = 'squadpay-shell-v2';
 const SHELL_ASSETS = ['/', '/manifest.json', '/icon-192.png', '/icon-512.png', '/favicon.png'];
 
 self.addEventListener('install', (event) => {

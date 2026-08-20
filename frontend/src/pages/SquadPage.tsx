@@ -189,9 +189,11 @@ export default function SquadPage() {
         </button>
         <div className="flex items-center gap-2">
           <NotificationBell squadId={id} />
-          <ThemeToggle />
-          <SoundToggle />
-          {/* Desktop-only quick buttons — on mobile these (plus Leave/Delete) live in the ⋮ menu instead, since 5 unwrapped items here overflowed narrow screens */}
+          <div className="hidden sm:flex items-center gap-2">
+            <ThemeToggle />
+            <SoundToggle />
+          </div>
+          {/* Desktop-only quick buttons — on mobile these (plus Leave/Delete) live in the ⋮ menu instead, since this row overflowed narrow screens */}
           <button onClick={() => setTab('fun')}
             className="hidden sm:inline-flex bbtn bbtn-ghost gap-1.5 px-3 py-1.5 text-xs"><BarChart2 className="h-3.5 w-3.5" /> Analytics</button>
           <button onClick={copyCode}
@@ -214,6 +216,11 @@ export default function SquadPage() {
                     transition={{type:'spring',damping:25,stiffness:300}}
                     className="absolute right-0 top-12 z-50 w-56 rounded-2xl overflow-hidden"
                     style={{ background:'var(--color-ink-900)', border:'2px solid #f5f0e8', boxShadow:'0 8px 30px rgba(0,0,0,0.4)' }}>
+                    <div className="flex sm:hidden items-center justify-center gap-6 py-2.5" style={{ borderBottom:'1px solid rgba(var(--rt-bone-rgb),0.1)' }}>
+                      <ThemeToggle />
+                      <div style={{ width:'1px', height:'1.25rem', background:'rgba(var(--rt-bone-rgb),0.15)' }} />
+                      <SoundToggle />
+                    </div>
                     <button onClick={() => { setTab('fun'); setShowMenu(false); }}
                       className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-bold sm:hidden"
                       style={{ color:'var(--color-bone)', borderBottom:'1px solid rgba(var(--rt-bone-rgb),0.1)' }}>

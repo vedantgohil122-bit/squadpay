@@ -35,6 +35,33 @@ so this was a backend-only fix.
 Without these two variables, avatar/photo uploads return a clear error —
 everything else in the app is unaffected.
 
+## 📐 v6.7.3 — whole-page horizontal shift on mobile, further nav trim
+
+Reported: on a real phone, the entire squad page was shifted left with
+text cut off ("asury" instead of "Treasury"), and the top nav still
+showed the full Analytics/invite-code button row that should've been
+hidden on mobile since v6.3.
+
+- **Root cause of the shift:** no safeguard existed anywhere against the
+  page becoming horizontally scrollable — if any element, anywhere in a
+  deep component tree, ever rendered even slightly wider than the
+  viewport, the *entire page* became side-scrollable, and any nonzero
+  scroll position would shift everything left in sync (which is exactly
+  what the screenshot showed). Added `overflow-x: hidden` + `max-width:
+  100vw` on `html, body` as a global safety net — this class of bug can't
+  recur regardless of which future component causes the overflow.
+- **The crowded nav row was source-code-correct** (verified directly —
+  `hidden sm:inline-flex` was already properly in place from v6.3) but
+  the phone was almost certainly showing a **stale cached PWA shell**.
+  Bumped the service worker's cache version (`v1` → `v2`) to force any
+  phone stuck on an old cached build to clean it up and fetch fresh —
+  the cleanup logic already existed, it just needed a version bump to
+  trigger.
+- **Trimmed the mobile nav further** per request: dark-mode and sound
+  toggles moved out of the main row into the `⋮` menu on mobile (still
+  reachable, just not cluttering the tightest screen real estate) — down
+  to just the notification bell and the menu button on small screens.
+
 ## 🎨 v6.7.2 — professional login page, mobile safe-area + alignment fixes
 
 **Login/Register page:**
