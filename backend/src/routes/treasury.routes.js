@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import { requireAuth } from '../middleware/auth.js';
+import { getTreasury, addContribution, getMemberWallet, getTreasuryAnalytics } from '../controllers/treasury.controller.js';
+const r = Router();
+r.use(requireAuth);
+r.get('/:squadId', getTreasury);
+r.post('/contribute', addContribution);
+r.get('/:squadId/wallet', getMemberWallet);
+r.get('/:squadId/analytics', getTreasuryAnalytics);
+export default r;
